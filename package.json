@@ -9,6 +9,16 @@
   "author": "Weisse <cucinella.pietro@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.12.2"
+    "consolidate": "^0.11.0",
+    "dot": "^1.0.3",
+    "ejs": "^2.3.1",
+    "express": "^4.12.2",
+    "handlebars": "^3.0.0",
+    "html": "0.0.9",
+    "jade": "^1.9.2",
+    "json": "^9.0.3",
+    "mustache": "^1.1.0",
+    "simplefs": "^0.5.3",
+    "underscore": "^1.8.2"
   }
 }

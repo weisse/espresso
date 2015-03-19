@@ -1,122 +1,42 @@
-var espresso = function(cad){
+var espresso = function(awd){
     
-    // BASE PATH
-    if(!cad){
-        
-        var cad = process.cwd()
-        
-    }
+    // REQUIREMENTS
+    var _ = require("underscore");
     
+    // LOAD EXPRESS
     var express = require("express");
-    var app = express();
-    var config = require(cad + "/application") || {};
     
-    // LOAD GLOBAL MIDDLEWARES
-    if(config.middlewares){
-        
-        for(var i = 0; i < config.middlewares.length; i++){
-            
-            var middleware = require(cad + "/middlewares/" + config.middlewares[i]);
-            
-            if(middleware){
-                
-                app.use(middleware);
-                
-            }
-            
-        }
-        
-    };
+    // CREATE APPLICATION
+    var app = express();
+    
+    // SET APPLICATION WORKING DIRECTORY
+    app.set("awd", awd || process.cwd());
+    
+    // LOAD APPLICATION JSON
+    var application = require(app.get("awd") + "/application") || {};
+    
+    // LOAD APPLICATION CONFIGURATIONS
+    var config = _.extend(require("./defaults/application.config"), application.config || {});
+    
+    // SET APPLICATION ENGINES
+    require("./automations/engines")(espresso, app);
+    
+    // SET APPLICATION VIEWS DIRECTORY
+    app.set("views", app.get("awd") + config.viewsPath);
+    
+    // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
+    app.use(config.staticRoute, express.static(app.get("awd") + config.staticPath));
+    
+    // LOAD APPLICATION-LEVEL MIDDLEWARES
+    if(application.middlewares) require("./automations/middlewares")(espresso, app, application.middlewares);
     
     // LOAD ROUTES
-    if(config.routes){
-        
-        for(var path in config.routes){
-            
-            // LOAD ROUTE MIDDLEWARES
-            if(config.routes[path].middlewares){
-                
-                for(var i = 0; i < config.routes[path].middlewares.length; i++){
-            
-                    var middleware = require(cad + "/middlewares/" + config.routes[path].middlewares[i]);
-
-                    if(middleware){
-
-                        app.use(path, middleware);
-                        
-                    }
-
-                }
-                
-            }
-            
-            // LOAD ROUTE APPLICATION
-            if(config.routes[path].application){
-                
-                var application = require(cad + "/applications/" + config.routes[path].application + "/application");
-                
-                if(application){
-                    
-                    app.use(path, espresso(cad + "/applications/" + config.routes[path].application));
-                    
-                }
-                
-            // LOAD ROUTE SERVICES
-            }else if(config.routes[path].methods){
-                
-                var services = config.routes[path].methods;
-                
-                for(var method in services){
-                    
-                    var args = [path];
-                    
-                    if(typeof services[method] === "string"){
-                        
-                        var service = require(cad + "/services/" + services[method]);
-                        
-                        if(service){
-
-                            args.push(service);
-
-                        }
-                        
-                    }else{
-                        
-                        for(var service in services[method]){
-                        
-                            var service = require(cad + "/services/" + services[method][service]);
-
-                            if(service){
-
-                                args.push(service);
-
-                            }
-
-                        }
-                        
-                    }
-                    
-                    app[method].apply(app, args);
-                    
-                }
-                
-            }
-            
-        }
-        
-    }
+    if(application.routes) require("./automations/routes")(espresso, app, application.routes);
     
     // LOAD LOCALS
-    if(config.locals){
-        
-        for(var key in config.locals){
-            
-            app.set(key, config.locals[key]);
-            
-        }
-        
-    }
+    if(application.locals) require("./automations/locals")(espresso, app, application.locals);
     
+    // RETURN APPLICATION
     return app;
     
 };

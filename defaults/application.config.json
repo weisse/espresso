@@ -1,0 +1,7 @@
+{
+    
+    "viewsPath": "/views",
+    "staticRoute": "/",
+    "staticPath": "/public"
+    
+}
