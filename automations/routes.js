@@ -14,6 +14,9 @@ module.exports = function(espresso, app, routes){
 
         // LOAD ROUTE SERVICES
         else if(routes[path].methods) require("./routes/methods")(espresso, app, routePath, routes[path].methods);
+        
+        // LOAD ROUTER-LEVEL ERRORWARES
+        if(routes[path].errorwares) require("./routes/errorwares")(espresso, app, routePath, routes[path].errorwares);
 
     }
     

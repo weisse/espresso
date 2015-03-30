@@ -11,6 +11,6 @@ module.exports = function(espresso, app){
     app.engine('dot', cons.dot);
     
     // SET PUBLIC AS VIEW DIRECTORY
-    app.set('views', app.get("awd") + '/public');
+    app.set('views', app.get("wd") + '/public');
     
 }

@@ -6,7 +6,7 @@ module.exports = function(espresso, app, path, methods){
 
         if(typeof methods[method] === "string"){
 
-            var service = require(app.get("awd") + "/services/" + methods[method]);
+            var service = require(app.get("wd") + "/services/" + methods[method]);
 
             if(service){
 
@@ -18,7 +18,7 @@ module.exports = function(espresso, app, path, methods){
 
             for(var service in methods[method]){
 
-                var service = require(app.get("awd") + "/services/" + methods[method][service]);
+                var service = require(app.get("wd") + "/services/" + methods[method][service]);
 
                 if(service){
 
