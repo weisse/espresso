@@ -1,4 +1,4 @@
-module.exports = function(espresso, app, router, path, methods){
+module.exports = function(app, router, path, methods){
     
     for(var method in methods){
 

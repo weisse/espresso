@@ -1,15 +1,15 @@
-module.exports = function(espresso, app, router, path, errorwares){
-
+module.exports = function(app, errorwares){
+        
     for(var i = 0; i < errorwares.length; i++){
 
         var errorware = require(app.get("wd") + "/errorwares/" + errorwares[i]);
 
         if(errorware){
 
-            router.use(path, errorware);
+            app.use(errorware);
 
         }
 
     }
-  
+
 };

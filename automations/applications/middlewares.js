@@ -1,15 +1,15 @@
-module.exports = function(espresso, app, router, path, middlewares){
-
+module.exports = function(app, middlewares){
+        
     for(var i = 0; i < middlewares.length; i++){
 
         var middleware = require(app.get("wd") + "/middlewares/" + middlewares[i]);
 
         if(middleware){
 
-            router.use(path, middleware);
+            app.use(middleware);
 
         }
 
     }
-  
+
 };

@@ -1,4 +1,4 @@
-module.exports = function(espresso, app, postDeploy){
+module.exports = function(app, postDeploy){
     
     for(var i = 0; i < postDeploy.length; i++){
         

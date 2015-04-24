@@ -1,4 +1,4 @@
-module.exports = function(espresso, app, engines){
+module.exports = function(app, engines){
     
     var cons = require("consolidate");
     

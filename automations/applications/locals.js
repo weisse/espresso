@@ -1,4 +1,4 @@
-module.exports = function(espresso, app, locals){
+module.exports = function(app, locals){
        
     for(var key in locals){
 

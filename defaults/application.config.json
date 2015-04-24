@@ -1,12 +1,12 @@
 {
     
-    "viewsPath": "/views",
-    "staticRoute": "/",
-    "staticPaths": ["/public"],
+    "viewsPath":"./views",
+    "staticRoute":"/",
+    "staticPaths":["./public"],
     "engines":[
         
-        ["jade", "jade"],
-        ["ejs", "ejs"],
+        ["jade","jade"],
+        ["ejs","ejs"],
         ["underscore","_"],
         ["handlebars","hb"],
         ["mustache","mus"],
