@@ -30,9 +30,6 @@ var espresso = function(wd){
     // PRE-DEPLOY EXECUTION
     if(application["pre-deploy"]) require("./automations/preDeploy")(espresso, app, application["pre-deploy"]);
     
-    // PREPARE ROUTER
-    var router = new express.Router();
-    
     // DEPLOY INIT
     
         // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
@@ -41,8 +38,13 @@ var espresso = function(wd){
         // LOAD APPLICATION-LEVEL MIDDLEWARES
         if(application.middlewares) require("./automations/middlewares")(espresso, app, application.middlewares);
 
-        // LOAD ROUTES
-        if(application.routes) app.use(require("./automations/routes")(espresso, app, router, "/", application.routes));
+        // LOAD ROUTER
+        if(application.router){
+            
+            var router = new express.Router(application.router.options || {});
+            app.use(require("./automations/router")(espresso, app, router, "/", application.router));
+        
+        }
         
         // LOAD APPLICATION-LEVEL ERRORWARES
         if(application.errorwares) require("./automations/errorwares")(espresso, app, application.errorwares);
