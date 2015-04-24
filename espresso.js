@@ -21,19 +21,23 @@ var espresso = function(wd){
     // LOAD LOCALS
     if(application.locals) require("./automations/locals")(espresso, app, application.locals);
     
-    // SET APPLICATION ENGINES
-    require("./automations/engines")(espresso, app);
-
-    // SET APPLICATION VIEWS DIRECTORY
-    app.set("views", app.get("wd") + application.config.viewsPath);
-    
     // PRE-DEPLOY EXECUTION
     if(application["pre-deploy"]) require("./automations/preDeploy")(espresso, app, application["pre-deploy"]);
     
     // DEPLOY INIT
+
+        // SET APPLICATION ENGINES
+        require("./automations/engines")(espresso, app, application.config.engines);
+
+        // SET APPLICATION VIEWS DIRECTORY
+        app.set("views", app.get("wd") + application.config.viewsPath);
     
         // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
-        app.use(application.config.staticRoute, express.static(app.get("wd") + application.config.staticPath));
+        for(var path in application.config.staticPaths){
+            
+            app.use(application.config.staticRoute, express.static(app.get("wd") + application.config.staticPaths[path]));
+            
+        }
 
         // LOAD APPLICATION-LEVEL MIDDLEWARES
         if(application.middlewares) require("./automations/middlewares")(espresso, app, application.middlewares);

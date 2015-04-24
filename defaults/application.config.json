@@ -2,6 +2,16 @@
     
     "viewsPath": "/views",
     "staticRoute": "/",
-    "staticPath": "/public"
+    "staticPaths": ["/public"],
+    "engines":[
+        
+        ["jade", "jade"],
+        ["ejs", "ejs"],
+        ["underscore","_"],
+        ["handlebars","hb"],
+        ["mustache","mus"],
+        ["dot","dot"]
+        
+    ]
     
 }

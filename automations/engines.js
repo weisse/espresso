@@ -1,16 +1,11 @@
-module.exports = function(espresso, app){
+module.exports = function(espresso, app, engines){
     
     var cons = require("consolidate");
     
-    // SET ENGINES
-    app.engine('jade', cons.jade);
-    app.engine('ejs', cons.ejs);
-    app.engine('_', cons.underscore);
-    app.engine("han", cons.handlebars);
-    app.engine("mus", cons.mustache);
-    app.engine('dot', cons.dot);
-    
-    // SET PUBLIC AS VIEW DIRECTORY
-    app.set('views', app.get("wd") + '/public');
+    for(var i = 0; i < engines.length; i++){
+        
+        app.engine(engines[i][1], cons[engines[i][0]]);
+        
+    }
     
 }
