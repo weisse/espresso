@@ -1,10 +1,10 @@
-module.exports = function(espresso, app, path, application){
+module.exports = function(espresso, app, router, path, application){
     
     var subapp = require(app.get("wd") + "/applications/" + application + "/application");
 
     if(subapp){
 
-        app.use(path, espresso(app.get("wd") + "/applications/" + application));
+        router.use(path, espresso(app.get("wd") + "/applications/" + application));
 
     }
     

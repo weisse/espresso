@@ -1,4 +1,4 @@
-module.exports = function(espresso, app, path, errorwares){
+module.exports = function(espresso, app, router, path, errorwares){
 
     for(var i = 0; i < errorwares.length; i++){
 
@@ -6,7 +6,7 @@ module.exports = function(espresso, app, path, errorwares){
 
         if(errorware){
 
-            app.use(path, errorware);
+            router.use(path, errorware);
 
         }
 

@@ -1,4 +1,4 @@
-module.exports = function(espresso, app, path, methods){
+module.exports = function(espresso, app, router, path, methods){
     
     for(var method in methods){
 
@@ -30,7 +30,7 @@ module.exports = function(espresso, app, path, methods){
 
         }
 
-        app[method].apply(app, args);
+        router[method].apply(app, args);
 
     }
     
