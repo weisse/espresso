@@ -5,7 +5,7 @@ var fs = require("fs");
 var p = require("path");
 
 // DEFINE MODULE
-module.exports = function(wd){
+module.exports = function(parent, mountPath, wd){
     
     // CREATE APPLICATION
     var app = express();
@@ -89,9 +89,25 @@ module.exports = function(wd){
         // POST-DEPLOY EXECUTION
         if(application["post-deploy"]) require("./applications/postDeploy")(app, application["post-deploy"]);
         
-    }
+        // USE APP
+        parent.use(mountPath, app);
         
-    // RETURN APPLICATION
-    return app;
+    }
     
-}
+    // DEFINE UNDEPLOY PROCEDURE
+    var undeploy = function(app){
+
+        // CLEAN CACHE
+        for(var path in require.cache){
+            
+            if(path.match(new RegExp(app.get("wd") + "$"))){
+                
+                delete require.cache[path];
+                
+            }
+            
+        }
+
+    };
+    
+};

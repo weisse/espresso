@@ -2,6 +2,7 @@
 var x = require("xtra");
 var _ = require("underscore");
 var p = require("path");
+var express = require("express");
 
 // DEFINE ESPRESSO
 var espresso = function(opt){
@@ -16,14 +17,17 @@ var espresso = function(opt){
     // LOAD APPLICATION MODULE
     espresso.application = require("./automations/application");
     
-    // CREATE MAIN APPLICATION
-    var app = espresso.application(wd);
+    // CREATE ROOT APPLICATION
+    var root = express();
+    
+    // USE MAIN APPLICATION
+    espresso.application(root, "/", wd);
     
     // LISTEN IF IT WAS REQUESTED
-    if(options.listen) app.listen(options.listen);
+    if(options.listen) root.listen(options.listen);
     
-    // RETURN APP
-    return app;
+    // RETURN ROOT
+    return root;
     
 };
 
