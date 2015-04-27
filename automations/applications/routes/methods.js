@@ -1,3 +1,5 @@
+var p = require("path");
+
 module.exports = function(app, router, path, methods){
     
     for(var method in methods){
@@ -6,7 +8,7 @@ module.exports = function(app, router, path, methods){
 
         if(typeof methods[method] === "string"){
 
-            var service = require(app.get("wd") + "/services/" + methods[method]);
+            var service = require(p.normalize(p.resolve(app.get("wd") + "/services", methods[method])));
 
             if(service){
 
@@ -18,7 +20,7 @@ module.exports = function(app, router, path, methods){
 
             for(var service in methods[method]){
 
-                var service = require(app.get("wd") + "/services/" + methods[method][service]);
+                var service = require(p.normalize(p.resolve(app.get("wd") + "/services", methods[method][service])));
 
                 if(service){
 
