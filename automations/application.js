@@ -75,8 +75,9 @@ module.exports = function(wd){
             // LOAD ROUTER
             if(application.router){
 
-                var router = new express.Router(application.router.options || {});
-                app.use(require("./applications/router")(app, router, "/", application.router));
+                var router = express.Router(application.router.options || {});
+                require("./applications/router")(app, router, "/", application.router);
+                app.use(router);
 
             }
 

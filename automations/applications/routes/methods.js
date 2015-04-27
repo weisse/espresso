@@ -30,7 +30,7 @@ module.exports = function(app, router, path, methods){
 
         }
 
-        router[method].apply(app, args);
+        router[method].apply(router, args);
 
     }
     
