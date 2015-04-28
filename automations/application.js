@@ -6,35 +6,43 @@ var p = require("path");
 
 // DEFINE MODULE
 module.exports = function(parent, mountPath, wd){
-    
+
     var app;
     var esa;
-    
+
     var createApp = function(){
-    
+
         // CREATE APPLICATION
         app = express();
 
+        // SET APPLICATION ROOT DIRECTORY
+        app.set("rd", wd);
+
         // SET APPLICATION WORKING DIRECTORY
         app.set("wd", wd);
-        
-        // GET APPLICATION
-        getApp();
-        
+
+        // SET .ESA TEMP DIRECTORY
+        var guid = Math.random().toString().substring(2) + process.pid;
+        app.set("ed", p.normalize(p.resolve(p.resolve(app.get("wd"), ".."), guid)));
+
+        // GET APPLICATION JSON
+        getAppJSON();
+
     };
-        
-    // GET APPLICATION
-    var getApp = function(){
-        
+
+    // GET APPLICATION JSON
+    var getAppJSON = function(){
+
         // SET .ESA PATH
-        esa = app.get("wd") + ".esa";
-        
+        esa = app.get("rd") + ".esa";
+
         // SEARCH FOR .ESA
         fs.exists(esa, function(exists){
-        
+
             if(exists){
 
                 var unzip = require("unzip");
+                app.set("wd", app.get("ed"));
 
                 fs.createReadStream(esa)
                     .pipe(unzip.Extract({path:app.get("wd")}))
@@ -46,24 +54,25 @@ module.exports = function(parent, mountPath, wd){
 
             }else{
 
+                app.set("wd", app.get("rd"));
                 deploy();
 
             }
 
         });
-        
+
     };
-    
-        
+
+
     // DEFINE DEPLOY PROCEDURE
     var deploy = function(){
-        
+
         // LOAD APPLICATION JSON
         var application = require(app.get("wd") + "/application.json") || {};
 
         // SET APP NAME
         app.set("name", application.name);
-        
+
         // LOAD APPLICATION CONFIGURATIONS
         application.config = _.extend(require("../defaults/application.config.json"), application.config || {});
 
@@ -74,9 +83,9 @@ module.exports = function(parent, mountPath, wd){
         if(application["pre-deploy"]) require("./applications/preDeploy")(app, application["pre-deploy"]);
 
         // DEPLOY INIT
-            
+
             console.log("Deploy: " + app.get("name"));
-            
+
             // SET APPLICATION ENGINES
             require("./applications/engines")(app, application.config.engines);
 
@@ -110,42 +119,29 @@ module.exports = function(parent, mountPath, wd){
 
         // POST-DEPLOY EXECUTION
         if(application["post-deploy"]) require("./applications/postDeploy")(app, application["post-deploy"]);
-        
+
         // USE APP
         parent.use(mountPath, app);
-        
+
         // SET SIGNATURE
         parent._router.stack[parent._router.stack.length - 1].signature = Math.random().toString().substring(2);
         app.set("parent_router_stack_signature", parent._router.stack[parent._router.stack.length - 1].signature);
-        
+
         // WATCHER
         if(application.config.watch){
 
-            setTimeout(function(){
-                
-                fs.watchFile(esa, function(curr, prev){
+            fs.watchFile(esa, function(curr, prev){
 
-                    fs.unwatchFile(esa);
-                    fs.rename(wd, wd + "_" + (new Date()).getTime(), function(err){
+                fs.unwatchFile(esa);
+                undeploy();
+                createApp();
 
-                        if(!err){
-
-                            undeploy();
-                            createApp();
-
-                        }
-
-                    })
-
-
-                });
-                
-            }, application.config.watchDelay);
+            });
 
         }
-        
+
     };
-    
+
     // DEFINE UNDEPLOY PROCEDURE
     var undeploy = function(){
 
@@ -153,29 +149,29 @@ module.exports = function(parent, mountPath, wd){
 
         // REMOVE FROM PARENT ROUTER
         var route = _.find(parent._router.stack, function(route){
-            
+
             return route.signature === app.get("parent_router_stack_signature");
-            
+
         });
         parent._router.stack = _.reject(parent._router.stack, function(item){
-            
+
             return item === route;
-            
+
         });
-        
+
         // CLEAN CACHE
         for(var path in require.cache){
-            
+
             if(path.match("^" + app.get("wd"))){
-                
+
                 delete require.cache[path];
-                
+
             }
-            
+
         }
-        
+
     };
-    
+
     createApp();
-    
+
 };

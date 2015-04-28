@@ -18,7 +18,6 @@
     "jade": "^1.9.2",
     "json": "^9.0.3",
     "mustache": "^1.1.0",
-    "simplefs": "^0.5.3",
     "underscore": "^1.8.2",
     "unzip": "^0.1.11",
     "xtra": "0.0.8"

@@ -1,8 +1,8 @@
 {
-    
+
     "main":".",
     "listen":8080,
     "cluster":false,
-    "processes":0
-    
+    "workers":0
+
 }
