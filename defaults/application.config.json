@@ -3,6 +3,9 @@
     "viewsPath":"./views",
     "staticRoute":"/",
     "staticPaths":["./public"],
+    "staticOptions":{},
+    "watch":true,
+    "watchDelay":5000,
     "engines":[
         
         ["jade","jade"],
@@ -12,6 +15,7 @@
         ["mustache","mus"],
         ["dot","dot"]
         
-    ]
+    ],
+    "options":{}
     
 }

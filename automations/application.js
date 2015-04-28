@@ -7,37 +7,53 @@ var p = require("path");
 // DEFINE MODULE
 module.exports = function(parent, mountPath, wd){
     
-    // CREATE APPLICATION
-    var app = express();
+    var app;
+    var esa;
     
-    // SET APPLICATION WORKING DIRECTORY
-    app.set("wd", wd);
-        
-    // SET .ESA PATH
-    var esa = app.get("wd") + ".esa";
-        
-    // SEARCH FOR .ESA
-    fs.exists(esa, function(exists){
-        
-        if(exists){
-            
-            var unzip = require("unzip");
-            
-            fs.createReadStream(esa)
-                .pipe(unzip.Extract({path:app.get("wd")}))
-                .on("close", function(){
+    var createApp = function(){
+    
+        // CREATE APPLICATION
+        app = express();
 
-                    deploy();
-
-                });
-            
-        }else{
-            
-            deploy();
-            
-        }
+        // SET APPLICATION WORKING DIRECTORY
+        app.set("wd", wd);
         
-    });
+        // GET APPLICATION
+        getApp();
+        
+    };
+        
+    // GET APPLICATION
+    var getApp = function(){
+        
+        // SET .ESA PATH
+        esa = app.get("wd") + ".esa";
+        
+        // SEARCH FOR .ESA
+        fs.exists(esa, function(exists){
+        
+            if(exists){
+
+                var unzip = require("unzip");
+
+                fs.createReadStream(esa)
+                    .pipe(unzip.Extract({path:app.get("wd")}))
+                    .on("close", function(){
+
+                        deploy();
+
+                    });
+
+            }else{
+
+                deploy();
+
+            }
+
+        });
+        
+    };
+    
         
     // DEFINE DEPLOY PROCEDURE
     var deploy = function(){
@@ -45,6 +61,9 @@ module.exports = function(parent, mountPath, wd){
         // LOAD APPLICATION JSON
         var application = require(app.get("wd") + "/application.json") || {};
 
+        // SET APP NAME
+        app.set("name", application.name);
+        
         // LOAD APPLICATION CONFIGURATIONS
         application.config = _.extend(require("../defaults/application.config.json"), application.config || {});
 
@@ -55,7 +74,9 @@ module.exports = function(parent, mountPath, wd){
         if(application["pre-deploy"]) require("./applications/preDeploy")(app, application["pre-deploy"]);
 
         // DEPLOY INIT
-
+            
+            console.log("Deploy: " + app.get("name"));
+            
             // SET APPLICATION ENGINES
             require("./applications/engines")(app, application.config.engines);
 
@@ -65,7 +86,8 @@ module.exports = function(parent, mountPath, wd){
             // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
             for(var path in application.config.staticPaths){
 
-                app.use(application.config.staticRoute, express.static(p.normalize(p.resolve(app.get("wd"), application.config.staticPaths[path]))));
+                var absolutePath = p.normalize(p.resolve(app.get("wd"), application.config.staticPaths[path]));
+                app.use(application.config.staticRoute, express.static(absolutePath, application.config.staticOptions));
 
             }
 
@@ -92,22 +114,68 @@ module.exports = function(parent, mountPath, wd){
         // USE APP
         parent.use(mountPath, app);
         
-    }
+        // SET SIGNATURE
+        parent._router.stack[parent._router.stack.length - 1].signature = Math.random().toString().substring(2);
+        app.set("parent_router_stack_signature", parent._router.stack[parent._router.stack.length - 1].signature);
+        
+        // WATCHER
+        if(application.config.watch){
+
+            setTimeout(function(){
+                
+                fs.watchFile(esa, function(curr, prev){
+
+                    fs.unwatchFile(esa);
+                    fs.rename(wd, wd + "_" + (new Date()).getTime(), function(err){
+
+                        if(!err){
+
+                            undeploy();
+                            createApp();
+
+                        }
+
+                    })
+
+
+                });
+                
+            }, application.config.watchDelay);
+
+        }
+        
+    };
     
     // DEFINE UNDEPLOY PROCEDURE
-    var undeploy = function(app){
+    var undeploy = function(){
 
+        console.log("Undeploy:", app.get("name"));
+
+        // REMOVE FROM PARENT ROUTER
+        var route = _.find(parent._router.stack, function(route){
+            
+            return route.signature === app.get("parent_router_stack_signature");
+            
+        });
+        parent._router.stack = _.reject(parent._router.stack, function(item){
+            
+            return item === route;
+            
+        });
+        
         // CLEAN CACHE
         for(var path in require.cache){
             
-            if(path.match(new RegExp(app.get("wd") + "$"))){
+            if(path.match("^" + app.get("wd"))){
                 
                 delete require.cache[path];
                 
             }
             
         }
-
+        
     };
+    
+    createApp();
     
 };

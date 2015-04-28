@@ -1,6 +1,8 @@
 {
     
     "main":".",
-    "listen":8080
+    "listen":8080,
+    "cluster":false,
+    "processes":0
     
 }
