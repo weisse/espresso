@@ -1,11 +1,11 @@
 module.exports = function(app, router, routePath, descriptor){
-        
-    var subrouter = require("express").Router(descriptor.options || {});
-    
+
+    var subrouter = require("../../espresso").router(descriptor.options || {});
+
     if(descriptor.routes){
-        
+
         for(var path in descriptor.routes){
-        
+
             var subrouterPath = path;
 
             if(descriptor.routes[path].type && descriptor.routes[path].type === "regexp") subrouterPath = new RegExp(path);
@@ -26,9 +26,9 @@ module.exports = function(app, router, routePath, descriptor){
             if(descriptor.routes[path].errorwares) require("./routes/errorwares")(app, subrouter, subrouterPath, descriptor.routes[path].errorwares);
 
         }
-        
+
     }
-    
-    router.use(routePath, subrouter);
-    
+
+    router.deploy(routePath, subrouter);
+
 };

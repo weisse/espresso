@@ -18,10 +18,10 @@ var espresso = function(opt){
     var makeApp = function(){
 
         // CREATE ROOT APPLICATION
-        var root = express();
+        var root = espresso.application();
 
         // USE MAIN APPLICATION
-        espresso.application(root, "/", wd);
+        root.deploy("/", espresso.application(wd));
 
         // LISTEN IF IT WAS REQUESTED
         if(options.listen) root.listen(options.listen);
@@ -77,7 +77,8 @@ var espresso = function(opt){
 };
 
 // LOAD APPLICATION MODULE
-espresso.application = require("./automations/application");
+espresso.application = require("./classes/application");
+espresso.router = require("./classes/router");
 
 // EXPORTS ESPRESSO
 module.exports = espresso;
