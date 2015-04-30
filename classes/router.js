@@ -2,6 +2,7 @@
 var express = require("express");
 var _ = require("underscore");
 var commons = require("./commons/element.methods.js");
+var logger = require("../libs/logger");
 
 // DEFINE CLASS
 var esrt = function(options){
@@ -16,7 +17,8 @@ var esrt = function(options){
         parent: null,
         signature: null,
         mountPath: null,
-        childrenTable: []
+        childrenTable: [],
+        config: _.extend(require("../defaults/router.config.json"), options.config || {})
 
     };
 
@@ -35,6 +37,22 @@ var esrt = function(options){
         return this;
 
     };
+    router.getApp = function(){
+
+        var current = this;
+
+        while(current.getType() !== "application"){
+
+            current = current.getParent();
+
+        }
+
+        return current;
+
+    };
+
+    // CREATE LOGGER
+    router.log = logger(router.getConfig());
 
     return router;
 

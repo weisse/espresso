@@ -2,6 +2,7 @@
 var p = require("path");
 var fs = require("fs");
 var _ = require("underscore");
+var x = require("xtra");
 
 // DEFINE MODULE
 module.exports = {
@@ -71,18 +72,22 @@ module.exports = {
 
             if(child.getType() === "application"){
 
-                console.log("deploy", child.get("name"));
+                self.log.info("deploy", child.get("name"));
 
                 // WATCHER
-                if(child.get("config").watch){
+                if(child.getConfig("watch")){
 
-                    fs.watchFile(child.getEP(), function(curr, prev){
+                    setTimeout(function(){
 
-                        fs.unwatchFile(child.getEP());
-                        self.undeploy(child);
-                        self.deploy(child._espresso.mountPath, require("../../espresso").application(child.get("rd")));
+                        fs.watchFile(child.getEP(), function(curr, prev){
 
-                    });
+                            fs.unwatchFile(child.getEP());
+                            self.undeploy(child);
+                            self.deploy(child._espresso.mountPath, require("../../espresso").application(child.get("rd")));
+
+                        });
+
+                    }, child.getConfig("watchDelay"));
 
                 }
 
@@ -140,7 +145,7 @@ module.exports = {
 
         if(child.getType() === "application"){
 
-            console.log("undeploy", child.get("name"));
+            this.log.info("undeploy", child.get("name"));
 
             // CLEAN CACHE
             for(var path in require.cache){
@@ -167,6 +172,25 @@ module.exports = {
         return this;
 
     },
+    getConfig: function(attr){
+
+        if(attr) return this._espresso.config[attr];
+        else return this._espresso.config;
+
+    },
+    setConfig: function(){
+
+        if(arguments.length > 1 && x.isString(arguments[0])){
+
+            this._espresso.config[arguments[0]] = arguments[1];
+
+        }else if(arguments.length === 1 && x.isObject(arguments[0])){
+
+            this._espresso.config = arguments[0];
+
+        }
+
+    },
     getRoot: function(){
 
         var root = this;
@@ -180,6 +204,36 @@ module.exports = {
         }
 
         return root;
+
+    },
+    getHierarchy: function(){
+
+        var root = this.getRoot();
+        var hierarchy = {};
+
+        var recursive = function(entity){
+
+            var obj = {};
+            obj.type = entity.getType();
+            if(obj.type == "application") obj.name = entity.get("name");
+            var children = entity.getChildrenTable()
+
+            if(children.length){
+
+                obj.children = {};
+                for(var i = 0; i < children.length; i++){
+
+                    obj.children[children[i].mountPath] = recursive(children[i].child);
+
+                }
+
+            }
+
+            return obj;
+
+        }
+
+        return JSON.stringify(recursive(root));
 
     }
 

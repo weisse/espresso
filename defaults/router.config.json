@@ -1,0 +1,15 @@
+{
+
+    "log":true,
+        "logName":"router",
+        "filesystemLog":true,
+            "filesystemLogPath":"espresso.log",
+            "filesystemLogLevel":"info",
+            "filesystemLogRotation":true,
+                "filesystemLogRotationPeriod":"1d",
+                "filesystemLogRotationCount":100,
+
+        "stdoutLog":true,
+            "stdoutLogLevel":"info"
+
+}

@@ -1,8 +1,39 @@
 {
 
     "main":".",
+
     "listen":8080,
+
     "cluster":false,
-    "workers":0
+        "workers":0,
+        "forever":true,
+
+    "log":true,
+        "logName":"espresso",
+        "filesystemLog":true,
+            "filesystemLogPath":"espresso.log",
+            "filesystemLogLevel":"info",
+            "filesystemLogRotation":true,
+                "filesystemLogRotationPeriod":"1d",
+                "filesystemLogRotationCount":100,
+
+        "stdoutLog":true,
+            "stdoutLogLevel":"info",
+
+    "root": {
+
+        "log":true,
+            "logName":"root",
+            "filesystemLog":true,
+                "filesystemLogPath":"espresso.log",
+                "filesystemLogLevel":"info",
+                "filesystemLogRotation":true,
+                    "filesystemLogRotationPeriod":"1d",
+                    "filesystemLogRotationCount":100,
+
+            "stdoutLog":true,
+                "stdoutLogLevel":"info"
+
+    }
 
 }

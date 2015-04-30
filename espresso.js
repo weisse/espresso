@@ -3,6 +3,7 @@ var x = require("xtra");
 var _ = require("underscore");
 var p = require("path");
 var express = require("express");
+var logger = require("./libs/logger.js");
 
 // DEFINE ESPRESSO
 var espresso = function(opt){
@@ -10,6 +11,9 @@ var espresso = function(opt){
     // SET DEFAULTS
     var options = _.extend(require("./defaults/espresso.config.json"), opt || {});
     var wd = process.cwd();
+
+    // CREATE ESPREESSO LOGGER
+    this.log = logger(options);
 
     // CHECK FOR ENTRY POINT
     if(options.main) wd = p.normalize(p.resolve(wd, options.main));
@@ -19,6 +23,10 @@ var espresso = function(opt){
 
         // CREATE ROOT APPLICATION
         var root = espresso.application();
+
+        // CREATE ROOT LOGGER
+        root.setConfig(options.root);
+        root.log = logger(root.getConfig());
 
         // USE MAIN APPLICATION
         root.deploy("/", espresso.application(wd));
@@ -31,24 +39,27 @@ var espresso = function(opt){
     // CREATE WORKERS IF IT WAS REQUESTED
     if(options.cluster){
 
+        var self = this;
         var cluster = require('cluster');
 
         if(cluster.isMaster){
+
+            self.log.info("cluster mode activated");
 
             var workers;
 
             // NOTICE CLUSTER FORK
             cluster.on("fork", function(worker){
 
-                console.log("worker " + worker.process.pid + " created.");
+                self.log.info("worker " + worker.process.pid + " created");
 
             });
 
             // NOTICE WORKER DIE
             cluster.on("exit", function(worker, code, signal){
 
-                console.log("worker " + worker.process.pid + " died");
-                cluster.fork();
+                self.log.info("worker " + worker.process.pid + " died");
+                if(options.forever) cluster.fork();
 
             });
 
@@ -78,6 +89,8 @@ var espresso = function(opt){
 
 // LOAD APPLICATION MODULE
 espresso.application = require("./classes/application");
+
+// LOAD ROUTER MODULE
 espresso.router = require("./classes/router");
 
 // EXPORTS ESPRESSO

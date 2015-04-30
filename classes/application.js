@@ -5,6 +5,7 @@ var p = require("path");
 var fs = require("fs");
 var Router = require("./router.js");
 var commons = require("./commons/element.methods.js");
+var logger = require("../libs/logger.js");
 
 // DEFINE CLASS
 var esapp = function(rd){
@@ -22,7 +23,8 @@ var esapp = function(rd){
         parent: null,
         signature: null,
         mountPath: null,
-        childrenTable: []
+        childrenTable: [],
+        config: {}
 
     };
 
@@ -58,7 +60,7 @@ var esapp = function(rd){
         var esa = this.getEP();
 
         // SET .ESA TEMP DIRECTORY
-        var guid = Math.random().toString().substring(2) + process.pid;
+        var guid = process.pid + "_" + (new Date()).getTime() + "_" + Math.random().toString().substring(2);
         app.set("ed", p.normalize(p.resolve(p.resolve(app.get("rd"), ".."), guid)));
 
         // SEARCH FOR .ESA
@@ -102,29 +104,37 @@ var esapp = function(rd){
             app.set("name", application.name);
 
             // SET CONFIG
-            app.set("config", _.extend(require("../defaults/application.config.json"), application.config || {}));
+            app.setConfig(_.extend(require("../defaults/application.config.json"), application.config || {}));
+
+            // CREATE LOGGER
+            app.setConfig("logName", app.get("name"));
+            app.log = logger(app.getConfig());
 
             // LOAD LOCALS
             if(application.locals) require("../automations/applications/locals")(app, application.locals);
 
             // PRE-MAKE EXECUTION
-            if(application["pre-deploy"]) require("../automations/applications/preDeploy")(app, application["pre-deploy"]);
+            if(application["pre-make"]) require("../automations/applications/preMake")(app, application["pre-make"]);
 
-            console.log("make", app.get("name"));
+            app.log.info("make");
 
             // MAKE INIT
 
                 // SET APPLICATION ENGINES
-                require("../automations/applications/engines")(app, app.get("config").engines);
+                require("../automations/applications/engines")(app, app.getConfig("engines"));
 
                 // SET APPLICATION VIEWS DIRECTORY
-                app.set("views", p.normalize(p.resolve(app.get("wd"), app.get("config").viewsPath)));
+                if(app.getConfig("views")) app.set("views", p.normalize(p.resolve(app.get("wd"), app.getConfig("viewsPath"))));
 
                 // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
-                for(var path in app.get("config").staticPaths){
+                if(app.getConfig("static")){
 
-                    var absolutePath = p.normalize(p.resolve(app.get("wd"), app.get("config").staticPaths[path]));
-                    app.use(app.get("config").staticRoute, express.static(absolutePath, app.get("config").staticOptions));
+                    for(var path in app.getConfig("staticPaths")){
+
+                        var absolutePath = p.normalize(p.resolve(app.get("wd"), app.getConfig("staticPaths")[path]));
+                        app.use(app.getConfig("staticRoute"), express.static(absolutePath, app.getConfig("staticOptions")));
+
+                    }
 
                 }
 
@@ -146,7 +156,7 @@ var esapp = function(rd){
             // MAKE ENDS
 
             // POST-MAKE EXECUTION
-            if(application["post-deploy"]) require("../automations/applications/postDeploy")(app, application["post-deploy"]);
+            if(application["post-make"]) require("../automations/applications/postMake")(app, application["post-make"]);
 
             // CALLBACK
             if(cb) cb();

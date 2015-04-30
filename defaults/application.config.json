@@ -1,21 +1,36 @@
 {
-    
-    "viewsPath":"./views",
-    "staticRoute":"/",
-    "staticPaths":["./public"],
-    "staticOptions":{},
+
+    "views":true,
+        "viewsPath":"./views",
+
+    "static":true,
+        "staticRoute":"/",
+        "staticPaths":["./public"],
+        "staticOptions":{},
+
     "watch":true,
-    "watchDelay":5000,
+        "watchDelay":0,
+
     "engines":[
-        
+
         ["jade","jade"],
         ["ejs","ejs"],
         ["underscore","_"],
         ["handlebars","hb"],
         ["mustache","mus"],
         ["dot","dot"]
-        
+
     ],
-    "options":{}
-    
+    "options":{},
+
+    "log":true,
+        "filesystemLog":true,
+            "filesystemLogPath":"espresso.log",
+            "filesystemLogLevel":"info",
+            "filesystemLogRotation":true,
+                "filesystemLogRotationPeriod":"1d",
+                "filesystemLogRotationCount":100,
+        "stdoutLog":true,
+            "stdoutLogLevel":"info"
+
 }
