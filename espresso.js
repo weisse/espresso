@@ -32,7 +32,11 @@ var espresso = function(opt){
         root.deploy("/", espresso.application(wd));
 
         // LISTEN IF IT WAS REQUESTED
-        if(options.listen) root.listen(options.listen);
+        if(options.listen) root.listen(options.port, function(){
+
+            root.log.info("listen to port " + options.port);
+
+        });
 
     };
 
