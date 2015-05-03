@@ -2,10 +2,14 @@ var p = require("path");
 
 module.exports = function(promise, app, router, path, application){
 
-    var espresso = require("../../../espresso");
+    var App = require("../../../classes/application");
     promise = promise.then(function(){
 
-        return router.deploy(path, espresso.application(p.normalize(p.resolve(app.get("wd") + "/applications", application))));
+        return App(p.normalize(p.resolve(app.get("wd") + "/applications", application))).make().then(function(app){
+
+            router.deploy(path, app);
+
+        });
 
     });
 

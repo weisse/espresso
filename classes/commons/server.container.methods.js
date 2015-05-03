@@ -68,70 +68,51 @@ module.exports = {
         return this;
 
     },
-    deploy: function(mountPath, child, cb){
+    deploy: function(mountPath, child){
 
         var self = this;
-        var promise = new bluebird.Promise(function(res,rej){
-
-            res(child);
-
-        });
-
-        var makeDeploy = function(){
-
-            if(child.getType() === "application"){
-
-                self.log.info("deploy", child.get("name"));
-
-                // WATCHER
-                if(child.getConfig("watch")){
-
-                    setTimeout(function(){
-
-                        fs.watchFile(child.getEP(), function(curr, prev){
-
-                            fs.unwatchFile(child.getEP());
-                            self.undeploy(child);
-                            self.deploy(child._espresso.mountPath, require("../../espresso").application(child.get("rd")));
-
-                        });
-
-                    }, child.getConfig("watchDelay"));
-
-                }
-
-            }
-
-            // USE CHILD
-            self.use(mountPath, child);
-
-            // SET REFERENCES
-            self.getStack()[self.getStack().length - 1].id = child.getId();
-            child.setParent(self).setMountPath(mountPath);
-            self.addChild(mountPath, child);
-
-        };
 
         if(child.getType() === "application"){
 
-            // MAKE APPLICATION THEN DEPLOY
-            promise = promise.then(function(child){ return child.make(makeDeploy) });
+            self.log.info("deploy", child.get("name"));
 
-        }else if(child.getType() === "router"){
+            // WATCHER
+            if(child.getConfig("watch")){
 
-            // DEPLOY ROUTER
-            promise = promise.then(makeDeploy);
+                setTimeout(function(){
+
+                    fs.watchFile(child.getEP(), function(curr, prev){
+
+                        fs.unwatchFile(child.getEP());
+                        require("../application")(child.get("rd")).make().then(function(app){
+
+                            self.undeploy(child);
+                            return app;
+
+                        }).then(function(app){
+
+                            self.deploy(child._espresso.mountPath, app);
+                            return app;
+
+                        });
+
+                    });
+
+                }, child.getConfig("watchDelay"));
+
+            }
 
         }
 
-        promise.then(cb).catch(function(err){
+        // USE CHILD
+        self.use(mountPath, child);
 
-            self.log.error(err);
-            self.log.error("deploy failed");
+        // SET REFERENCES
+        self.getStack()[self.getStack().length - 1].id = child.getId();
+        child.setParent(self).setMountPath(mountPath);
+        self.addChild(mountPath, child);
 
-        });
-
-        return promise;
+        return this;
 
     },
     unmount: function(child){

@@ -1,6 +1,6 @@
 module.exports = function(promise, app, router, routePath, descriptor){
 
-    var subrouter = require("../../espresso").router(descriptor.options || {});
+    var subrouter = require("../../classes/router")(descriptor.options || {});
 
     if(descriptor.routes){
 

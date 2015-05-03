@@ -151,7 +151,7 @@ var esapp = function(rd){
         return this;
 
     };
-    app.make = function(cb){
+    app.make = function(){
 
         var app = this;
         var promise = new app.promise(function(res,rej){
@@ -233,14 +233,12 @@ var esapp = function(rd){
 
                         app.log.info("make ends");
                         res(app);
-                        if(x.isFunction(cb)) cb(null, app);
 
                     }).catch(function(err){
 
                         app.log.error(err);
                         app.log.error("make failed");
                         rej(err);
-                        if(x.isFunction(cb)) cb(err);
 
                     });
 

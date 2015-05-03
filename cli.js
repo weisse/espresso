@@ -30,7 +30,7 @@ program
         if(options.repl) config.log = false, require("repl").start("espresso: ");
 
         // RUN IT
-        new require("./espresso.js")(config);
+        new require("./espresso.js").server(config);
 
     });
 
