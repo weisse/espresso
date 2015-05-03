@@ -1,17 +1,23 @@
 var p = require("path");
 
-module.exports = function(app, errorwares){
-        
-    for(var i = 0; i < errorwares.length; i++){
+module.exports = function(promise, app, errorwares){
 
-        var errorware = require(p.normalize(p.resolve(app.get("wd") + "/errorwares", errorwares[i])));
+    promise = promise.then(function(){
 
-        if(errorware){
+        for(var i = 0; i < errorwares.length; i++){
 
-            app.use(errorware);
+            var errorware = require(p.normalize(p.resolve(app.get("wd") + "/errorwares", errorwares[i])));
+
+            if(errorware){
+
+                app.use(errorware);
+
+            }
 
         }
 
-    }
+    });
+
+    return promise;
 
 };

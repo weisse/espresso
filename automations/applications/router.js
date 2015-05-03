@@ -1,4 +1,4 @@
-module.exports = function(app, router, routePath, descriptor){
+module.exports = function(promise, app, router, routePath, descriptor){
 
     var subrouter = require("../../espresso").router(descriptor.options || {});
 
@@ -11,24 +11,30 @@ module.exports = function(app, router, routePath, descriptor){
             if(descriptor.routes[path].type && descriptor.routes[path].type === "regexp") subrouterPath = new RegExp(path);
 
             // LOAD ROUTER-LEVEL MIDDLEWARES
-            if(descriptor.routes[path].middlewares) require("./routes/middlewares")(app, subrouter, subrouterPath, descriptor.routes[path].middlewares);
+            if(descriptor.routes[path].middlewares) promise = require("./routes/middlewares")(promise, app, subrouter, subrouterPath, descriptor.routes[path].middlewares);
 
             // LOAD ROUTE APPLICATION
-            if(descriptor.routes[path].application) require("./routes/application")(app, subrouter, subrouterPath, descriptor.routes[path].application);
+            if(descriptor.routes[path].application) promise = require("./routes/application")(promise, app, subrouter, subrouterPath, descriptor.routes[path].application);
 
             // LOAD ROUTE ROUTER
-            if(descriptor.routes[path].router) require("./router")(app, subrouter, subrouterPath, descriptor.routes[path].router);
+            if(descriptor.routes[path].router) promise = require("./router")(promise, app, subrouter, subrouterPath, descriptor.routes[path].router);
 
             // LOAD ROUTE SERVICES
-            if(descriptor.routes[path].methods) require("./routes/methods")(app, subrouter, subrouterPath, descriptor.routes[path].methods);
+            if(descriptor.routes[path].methods) promise = require("./routes/methods")(promise, app, subrouter, subrouterPath, descriptor.routes[path].methods);
 
             // LOAD ROUTER-LEVEL ERRORWARES
-            if(descriptor.routes[path].errorwares) require("./routes/errorwares")(app, subrouter, subrouterPath, descriptor.routes[path].errorwares);
+            if(descriptor.routes[path].errorwares) promise = require("./routes/errorwares")(promise, app, subrouter, subrouterPath, descriptor.routes[path].errorwares);
 
         }
 
     }
 
-    router.deploy(routePath, subrouter);
+    promise = promise.then(function(){
+
+        return router.deploy(routePath, subrouter);
+
+    });
+
+    return promise;
 
 };

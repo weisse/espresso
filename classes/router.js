@@ -1,7 +1,7 @@
 // DEPENDENCIES
 var express = require("express");
 var _ = require("underscore");
-var commons = require("./commons/element.methods.js");
+var commons = require("./commons/server.container.methods.js");
 var logger = require("../libs/logger");
 
 // DEFINE CLASS
@@ -13,9 +13,9 @@ var esrt = function(options){
     // ESPRESSO VARIABLES
     router._espresso = {
 
+        id: process.pid + (new Date()).getTime() + Math.random().toString().substring(2),
         type: "router",
         parent: null,
-        signature: null,
         mountPath: null,
         childrenTable: [],
         config: _.extend(require("../defaults/router.config.json"), options.config || {})

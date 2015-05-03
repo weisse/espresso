@@ -50,6 +50,31 @@ module.exports = function(config){
 
     }
 
-    return bunyan.createLogger(options);
+    var log = bunyan.createLogger(options);
+
+    var caller = function(name){
+
+        return function(){
+
+            if(espresso.config.log){
+
+                log[name].apply(log, arguments);
+
+            }
+
+        }
+
+    };
+
+    return {
+
+        fatal:caller("fatal"),
+        error:caller("error"),
+        warn:caller("warn"),
+        info:caller("info"),
+        debug:caller("debug"),
+        trace:caller("trace")
+
+    }
 
 };

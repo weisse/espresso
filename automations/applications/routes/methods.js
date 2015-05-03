@@ -1,22 +1,14 @@
 var p = require("path");
 
-module.exports = function(app, router, path, methods){
-    
+module.exports = function(promise, app, router, path, methods){
+
     for(var method in methods){
 
         var args = [path];
 
         if(typeof methods[method] === "string"){
 
-            var service = require(p.normalize(p.resolve(app.get("wd") + "/services", methods[method])));
-
-            if(service){
-
-                args.push(service);
-
-            }
-
-        }else{
+            methods[method] = [methods[method]];
 
             for(var service in methods[method]){
 
@@ -32,8 +24,14 @@ module.exports = function(app, router, path, methods){
 
         }
 
-        router[method].apply(router, args);
+        promise = promise.then(function(){
+
+            router[method].apply(router, args);
+
+        });
 
     }
-    
+
+    return promise;
+
 }

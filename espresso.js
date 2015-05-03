@@ -6,42 +6,58 @@ var express = require("express");
 var logger = require("./libs/logger.js");
 
 // DEFINE ESPRESSO
-var espresso = function(opt){
+var server = function(config){
 
-    // SET DEFAULTS
-    var options = _.extend(require("./defaults/espresso.config.json"), opt || {});
-    var wd = process.cwd();
+    // GLOBALIZE
+    espresso = this;
 
-    // CREATE ESPREESSO LOGGER
-    this.log = logger(options);
+    this.config = _.extend(require("./defaults/server.config.json"), config || {});
+    this.log = logger(this.config);
 
-    // CHECK FOR ENTRY POINT
-    if(options.main) wd = p.normalize(p.resolve(wd, options.main));
-
-    // DEFINE HOW TO MAKE AN APP
-    var makeApp = function(){
+    this.createRoot = function(){
 
         // CREATE ROOT APPLICATION
-        var root = espresso.application();
+        this.root = server.application();
 
         // CREATE ROOT LOGGER
-        root.setConfig(options.root);
-        root.log = logger(root.getConfig());
+        this.root.setConfig(this.config.root);
+        this.root.log = logger(root.getConfig());
+
+        return this;
+
+    };
+    this.loadMain = function(){
+
+        var self = this;
+
+        // SET ENTRY POINT
+        var wd = process.cwd();
+        if(this.config.main) wd = p.normalize(p.resolve(wd, this.config.main));
 
         // USE MAIN APPLICATION
-        root.deploy("/", espresso.application(wd));
+        this.root.deploy("/", server.application(wd), function(){
 
-        // LISTEN IF IT WAS REQUESTED
-        if(options.listen) root.listen(options.port, function(){
-
-            root.log.info("listen to port " + options.port);
+            if(self.config.listen) self.listen();
 
         });
 
-    };
+        return this;
 
-    // CREATE WORKERS IF IT WAS REQUESTED
-    if(options.cluster){
+    };
+    this.listen = function(p){
+
+        var self = this;
+
+        root.listen(p || this.config.port, function(){
+
+            root.log.info("listen to port " + self.config.port);
+
+        });
+
+        return this;
+
+    };
+    this.clusterize = function(w){
 
         var self = this;
         var cluster = require('cluster');
@@ -63,12 +79,13 @@ var espresso = function(opt){
             cluster.on("exit", function(worker, code, signal){
 
                 self.log.info("worker " + worker.process.pid + " died");
-                if(options.forever) cluster.fork();
+                if(self.config.forever) cluster.fork();
 
             });
 
             // SET NUMBER OF WORKERS
-            if(options.workers) workers = options.workers;
+            if(w) workers = w;
+            else if(self.config.workers) workers = self.config.workers;
             else workers = require('os').cpus().length - 1;
 
             // CREATE WORKERS
@@ -76,26 +93,36 @@ var espresso = function(opt){
 
         }else{
 
-            makeApp();
+            this.createRoot().loadMain();
 
         }
 
-    }else{
+    };
+    this.init = function(){
 
-        makeApp();
+        if(this.config.cluster){
 
-    }
+            this.clusterize();
 
-    // RETURN ROOT
-    return root;
+        }else{
+
+            this.createRoot().loadMain();
+
+        }
+
+        return this;
+
+    };
+
+    return this.init();
 
 };
 
 // LOAD APPLICATION MODULE
-espresso.application = require("./classes/application");
+server.application = require("./classes/application");
 
 // LOAD ROUTER MODULE
-espresso.router = require("./classes/router");
+server.router = require("./classes/router");
 
-// EXPORTS ESPRESSO
-module.exports = espresso;
+// EXPORTS ESPRESSO SERVER
+module.exports = server;

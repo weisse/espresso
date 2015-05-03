@@ -1,17 +1,23 @@
 var p = require("path");
 
-module.exports = function(app, middlewares){
-        
-    for(var i = 0; i < middlewares.length; i++){
+module.exports = function(promise, app, middlewares){
 
-        var middleware = require(p.normalize(p.resolve(app.get("wd") + "/middlewares", middlewares[i])));
+    promise = promise.then(function(){
 
-        if(middleware){
+        for(var i = 0; i < middlewares.length; i++){
 
-            app.use(middleware);
+            var middleware = require(p.normalize(p.resolve(app.get("wd") + "/middlewares", middlewares[i])));
+
+            if(middleware){
+
+                app.use(middleware);
+
+            }
 
         }
 
-    }
+    });
+
+    return promise;
 
 };

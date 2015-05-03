@@ -3,6 +3,7 @@ var p = require("path");
 var fs = require("fs");
 var _ = require("underscore");
 var x = require("xtra");
+var bluebird = require("bluebird");
 
 // DEFINE MODULE
 module.exports = {
@@ -23,14 +24,14 @@ module.exports = {
         return this;
 
     },
-    getSignature: function(){
+    getId: function(){
 
-        return this._espresso.signature;
+        return this._espresso.id;
 
     },
-    setSignature: function(signature){
+    setid: function(id){
 
-        this._espresso.signature = signature;
+        this._espresso.id = id;
         return this;
 
     },
@@ -53,6 +54,7 @@ module.exports = {
     addChild: function(mountPath, child){
 
         this._espresso.childrenTable.push({mountPath:mountPath,child:child});
+        return this;
 
     },
     removeChild: function(child){
@@ -63,10 +65,17 @@ module.exports = {
 
         });
 
+        return this;
+
     },
-    deploy: function(mountPath, child){
+    deploy: function(mountPath, child, cb){
 
         var self = this;
+        var promise = new bluebird.Promise(function(res,rej){
+
+            res(child);
+
+        });
 
         var makeDeploy = function(){
 
@@ -96,11 +105,9 @@ module.exports = {
             // USE CHILD
             self.use(mountPath, child);
 
-            // CREATE SIGNATURE
-            var signature = self.getStack()[self.getStack().length - 1].signature = Math.random().toString().substring(2);
-
             // SET REFERENCES
-            child.setParent(self).setSignature(signature).setMountPath(mountPath);
+            self.getStack()[self.getStack().length - 1].id = child.getId();
+            child.setParent(self).setMountPath(mountPath);
             self.addChild(mountPath, child);
 
         };
@@ -108,23 +115,30 @@ module.exports = {
         if(child.getType() === "application"){
 
             // MAKE APPLICATION THEN DEPLOY
-            child.make(makeDeploy);
+            promise = promise.then(function(child){ return child.make(makeDeploy) });
 
         }else if(child.getType() === "router"){
 
             // DEPLOY ROUTER
-            makeDeploy()
+            promise = promise.then(makeDeploy);
 
         }
 
-        return this;
+        promise.then(cb).catch(function(err){
+
+            self.log.error(err);
+            self.log.error("deploy failed");
+
+        });
+
+        return promise;
 
     },
     unmount: function(child){
 
         var route = _.find(this.getStack(), function(route){
 
-            return route.signature === child.getSignature();
+            return route.id === child.getId();
 
         });
 
@@ -160,8 +174,8 @@ module.exports = {
 
         }
 
-        // GET SIGNATURE
-        var signature = child._espresso.signature;
+        // GET id
+        var id = child._espresso.id;
 
         // REMOVE FROM PARENT ROUTER
         this.unmount(child);
@@ -189,6 +203,8 @@ module.exports = {
             this._espresso.config = arguments[0];
 
         }
+
+        return this;
 
     },
     getRoot: function(){
