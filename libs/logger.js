@@ -56,11 +56,11 @@ module.exports = function(config){
 
         return function(){
 
-            //if(espresso.config.log){
+            if(espresso.config.log){
 
                 log[name].apply(log, arguments);
 
-            //}
+            }
 
         }
 

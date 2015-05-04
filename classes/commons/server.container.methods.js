@@ -84,7 +84,7 @@ module.exports = {
                     fs.watchFile(child.getEP(), function(curr, prev){
 
                         fs.unwatchFile(child.getEP());
-                        require("../application")(child.get("rd")).make().then(function(app){
+                        require(p.resolve(__dirname, "../application"))(child.get("rd")).make().then(function(app){
 
                             self.undeploy(child);
                             return app;

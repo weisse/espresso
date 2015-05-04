@@ -1,6 +1,7 @@
 // REQUIREMENTS
-var server = require("./classes/server");
-var logger = require("./libs/logger");
+var p = require("path");
+var server = require(p.resolve(__dirname, "./classes/server"));
+var logger = require(p.resolve(__dirname, "./libs/logger"));
 var cluster = require('cluster');
 
 if(!cluster.isMaster){

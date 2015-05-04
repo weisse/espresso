@@ -1,8 +1,9 @@
 // DEPENDENCIES
 var express = require("express");
 var _ = require("underscore");
-var commons = require("./commons/server.container.methods.js");
-var logger = require("../libs/logger");
+var p = require("path");
+var commons = require(p.resolve(__dirname, "./commons/server.container.methods.js"));
+var logger = require(p.resolve(__dirname, "../libs/logger"));
 
 // DEFINE CLASS
 var esrt = function(options){
@@ -18,7 +19,7 @@ var esrt = function(options){
         parent: null,
         mountPath: null,
         childrenTable: [],
-        config: _.extend(require("../defaults/router.config.json"), options.config || {})
+        config: _.extend(require(p.resolve(__dirname, "../defaults/router.config.json")), options.config || {})
 
     };
 

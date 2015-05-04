@@ -3,7 +3,7 @@ var x = require("xtra");
 var _ = require("underscore");
 var p = require("path");
 var express = require("express");
-var logger = require("../libs/logger.js");
+var logger = require(p.resolve(__dirname, "../libs/logger.js"));
 
 // DEFINE ESPRESSO
 var server = function(config){
@@ -11,13 +11,13 @@ var server = function(config){
     // GLOBALIZE
     espresso = this;
 
-    this.config = _.extend(require("../defaults/server.config.json"), config || {});
+    this.config = _.extend(require(p.resolve(__dirname, "../defaults/server.config.json")), config || {});
     this.log = logger(this.config);
 
     this.createRoot = function(){
 
         // CREATE ROOT APPLICATION
-        this.root = require("./application.js")();
+        this.root = require(p.resolve(__dirname, "./application.js"))();
 
         // CREATE ROOT LOGGER
         this.root.setConfig(this.config.root);
@@ -35,7 +35,7 @@ var server = function(config){
         if(this.config.main) wd = p.normalize(p.resolve(wd, this.config.main));
 
         // USE MAIN APPLICATION
-        require("./application")(wd).make().then(function(app){
+        require(p.resolve(__dirname, "./application"))(wd).make().then(function(app){
 
             self.root.deploy("/", app);
 

@@ -5,9 +5,9 @@ var _ = require("underscore");
 var p = require("path");
 var fs = require("fs");
 var bluebird = require("bluebird");
-var Router = require("./router.js");
-var commons = require("./commons/server.container.methods.js");
-var logger = require("../libs/logger.js");
+var Router = require(p.resolve(__dirname, "./router.js"));
+var commons = require(p.resolve(__dirname, "./commons/server.container.methods.js"));
+var logger = require(p.resolve(__dirname, "../libs/logger.js"));
 
 // DEFINE CLASS
 var esapp = function(rd){
@@ -119,7 +119,7 @@ var esapp = function(rd){
                     app.set("name", descriptor.name);
 
                     // SET CONFIG
-                    app.setConfig(_.extend(require("../defaults/application.config.json"), descriptor.config || {}));
+                    app.setConfig(_.extend(require(p.resolve(__dirname, "../defaults/application.config.json")), descriptor.config || {}));
 
                     // CREATE LOGGER
                     if(espresso.config.log){
@@ -130,7 +130,7 @@ var esapp = function(rd){
                     }
 
                     // LOAD LOCALS
-                    if(descriptor.locals) require("../automations/applications/locals")(app, descriptor.locals);
+                    if(descriptor.locals) require(p.resolve(__dirname, "../automations/applications/locals"))(app, descriptor.locals);
 
                     // CALLBACK
                     if(x.isFunction(cb)) cb(null, descriptor);
@@ -169,14 +169,14 @@ var esapp = function(rd){
                     });
 
                     // PRE-MAKE EXECUTION
-                    if(descriptor["pre-make"]) promise = require("../automations/applications/preMake")(promise, app, descriptor["pre-make"]);
+                    if(descriptor["pre-make"]) promise = require(p.resolve(__dirname, "../automations/applications/preMake"))(promise, app, descriptor["pre-make"]);
 
                     // MAKE INIT
 
                         promise = promise.then(function(){
 
                             // SET APPLICATION ENGINES
-                            require("../automations/applications/engines")(app, app.getConfig("engines"));
+                            require(p.resolve(__dirname, "../automations/applications/engines"))(app, app.getConfig("engines"));
 
                             // SET APPLICATION VIEWS DIRECTORY
                             if(app.getConfig("views")) app.set("views", p.normalize(p.resolve(app.get("wd"), app.getConfig("viewsPath"))));
@@ -196,7 +196,7 @@ var esapp = function(rd){
                         });
 
                         // LOAD APPLICATION-LEVEL MIDDLEWARES
-                        if(descriptor.middlewares) promise = require("../automations/applications/middlewares")(promise, app, descriptor.middlewares);
+                        if(descriptor.middlewares) promise = require(p.resolve(__dirname, "../automations/applications/middlewares"))(promise, app, descriptor.middlewares);
 
                         // LOAD ROUTER
                         if(descriptor.router){
@@ -206,7 +206,7 @@ var esapp = function(rd){
                                 var promise = new app.promise(function(res,rej){ res() });
                                 var router = Router(descriptor.router.options || {});
 
-                                promise = require("../automations/applications/router")(promise, app, router, "/", descriptor.router);
+                                promise = require(p.resolve(__dirname, "../automations/applications/router"))(promise, app, router, "/", descriptor.router);
 
                                 promise.then(function(){
 
@@ -221,12 +221,12 @@ var esapp = function(rd){
                         }
 
                         // LOAD APPLICATION-LEVEL ERRORWARES
-                        if(descriptor.errorwares) promise = require("../automations/applications/errorwares")(promise, app, descriptor.errorwares);
+                        if(descriptor.errorwares) promise = require(p.resolve(__dirname, "../automations/applications/errorwares"))(promise, app, descriptor.errorwares);
 
                     // MAKE ENDS
 
                     // POST-MAKE EXECUTION
-                    if(descriptor["post-make"]) promise = require("../automations/applications/postMake")(promise, app, descriptor["post-make"]);
+                    if(descriptor["post-make"]) promise = require(p.resolve(__dirname, "../automations/applications/postMake"))(promise, app, descriptor["post-make"]);
 
                     // MAKE-PROCESS ENDING
                     promise.then(function(){
