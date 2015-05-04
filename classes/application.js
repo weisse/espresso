@@ -168,7 +168,7 @@ var esapp = function(rd){
 
                 if(!err){
 
-                    app.log.info("make initialization");
+                    espresso.log.info("make initialization");
 
                     var promise = new app.promise(function(res,rej){
 
@@ -239,7 +239,7 @@ var esapp = function(rd){
                     // MAKE-PROCESS ENDING
                     promise.then(function(){
 
-                        app.log.info("make ends");
+                        espresso.log.info("make ends");
                         res(app);
 
                     }).catch(function(err){

@@ -74,7 +74,7 @@ module.exports = {
 
         if(child.getType() === "application"){
 
-            self.log.info("deploy", child.get("name"));
+            espresso.log.info("deploy", child.get("name"));
 
             // WATCHER
             if(child.getConfig("watch")){
@@ -140,7 +140,7 @@ module.exports = {
 
         if(child.getType() === "application"){
 
-            this.log.info("undeploy", child.get("name"));
+            espresso.log.info("undeploy", child.get("name"));
 
             // CLEAN CACHE
             for(var path in require.cache){

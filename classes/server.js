@@ -21,7 +21,6 @@ var server = function(config){
 
         // CREATE ROOT LOGGER
         this.root.setConfig(this.config.root);
-        this.root.log = logger(this.root.getConfig());
 
         return this;
 
@@ -54,7 +53,7 @@ var server = function(config){
 
         this.root.listen(p || this.config.port, function(){
 
-            self.root.log.info("listen to port " + self.config.port);
+            espresso.log.info("listen to port " + self.config.port);
 
         });
 
@@ -67,6 +66,72 @@ var server = function(config){
         return this;
 
     };
+
+    // DASHBOARD UTILS
+    this.getContainers = function(){
+
+        var containers = [];
+
+        var recursive = function(container){
+
+            var children = container.getChildrenTable();
+            for(var i = 0; i < children.length; i++){
+
+                containers.push(children[i].child);
+                recursive(children[i].child);
+
+            }
+
+        }
+
+        recursive(this.root);
+        return containers;
+
+    };
+    this.getContainerById = function(id){
+
+        var containers = this.getContainers();
+        for(var i = 0; i < containers.length; i++){
+
+            if(containers[i].getId() === id) return containers[i];
+
+        }
+
+    }
+    this.getApplications = function(){
+
+        var containers = this.getContainers();
+        var applications = [];
+
+        for(var i = 0; i < containers.length; i++){
+
+            if(containers[i].getType() === "application") applications.push(containers[i]);
+
+        }
+
+        return applications;
+
+    };
+    this.getApplicationById = function(id){
+
+        var applications = this.getApplications();
+        for(var i = 0; i < applications.length; i++){
+
+            if(applications[i].getId() === id) return applications[i];
+
+        }
+
+    };
+    this.getApplicationByName = function(name){
+
+        var applications = this.getApplications();
+        for(var i = 0; i < applications.length; i++){
+
+            if(applications[i].get("name") === name) return applications[i];
+
+        }
+
+    }
 
     return this.init();
 

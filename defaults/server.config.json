@@ -35,6 +35,9 @@
             "stdoutLog":true,
                 "stdoutLogLevel":"info"
 
-    }
+    },
+
+    "dashboard":false,
+        "dashboardPort":8888
 
 }

@@ -6,55 +6,69 @@ var cluster = require('cluster');
 
 if(!cluster.isMaster){
 
-    process.on("message", function(config){
+    process.on("message", function(msg){
 
-        new server(config);
+        if(msg.type && msg.type === "init"){
+
+            var config = msg.payload;
+            new server(config);
+
+        }
 
     });
 
 }
 
-process.on("message", function(config){
+process.on("message", function(msg){
 
-    log = logger(config);
+    if(msg.type && msg.type === "init"){
 
-    if(config.cluster){
+        var config = msg.payload;
+        log = logger(config);
 
-        var self = this;
+        if(config.cluster){
 
-        if(cluster.isMaster){
+            var self = this;
 
-            log.info("cluster mode activated");
+            if(cluster.isMaster){
 
-            var workers;
+                log.info("cluster mode activated");
 
-            // NOTICE CLUSTER FORK
-            cluster.on("fork", function(worker){
+                var workers;
 
-                log.info("worker " + worker.process.pid + " created");
+                // NOTICE CLUSTER FORK
+                cluster.on("fork", function(worker){
 
-            });
+                    log.info("worker " + worker.process.pid + " created");
 
-            // NOTICE WORKER DIE
-            cluster.on("exit", function(worker, code, signal){
+                });
 
-                log.info("worker " + worker.process.pid + " died");
-                if(self.config.forever) cluster.fork();
+                // NOTICE WORKER DIE
+                cluster.on("exit", function(worker, code, signal){
 
-            });
+                    log.info("worker " + worker.process.pid + " died");
+                    if(self.config.forever) cluster.fork();
 
-            // SET NUMBER OF WORKERS
-            if(self.config.workers) workers = self.config.workers;
-            else workers = require('os').cpus().length - 1;
+                });
 
-            // CREATE WORKERS
-            for(var i = 0; i < workers; i++) cluster.fork().send(config);
+                // SET NUMBER OF WORKERS
+                if(self.config.workers) workers = self.config.workers;
+                else workers = require('os').cpus().length - 1;
+
+                // CREATE WORKERS
+                for(var i = 0; i < workers; i++) cluster.fork().send(msg);
+
+            }
+
+        }else{
+
+            // START SERVER
+            new server(config);
+
+            // IPC INTERFACE
+            require(p.resolve(__dirname, "./IPCs/server-single.js"));
 
         }
-
-    }else{
-
-        new server(config);
 
     }
 

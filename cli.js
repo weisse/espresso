@@ -15,6 +15,8 @@ program
         .option("-m --main <main>", "it defines the position of main application relative to cwd <default \".\">")
         .option("-o --log", "it chooses if log or not <default true>")
         .option("-r --repl", "it runs a REPL <default false>")
+        .option("-d --dashboard", "it runs a beautiful dashboard <default false>")
+        .option("-P --dashboardPort <dashboardPort>", "it defines the port number for the dashboard <default 8888>")
     .action(function(options){
 
         // GET DEFAULTS
@@ -28,6 +30,8 @@ program
         if(options.main) config.main = options.main;
         if(options.log) config.log = false;
         if(options.repl) config.log = false, require("repl").start("espresso: ");
+        if(options.dashboard) config.dashboard = true;
+        if(options.dashboardPort) config.dashboardPort = options.dashboardPort;
 
         // RUN IT
         new require("./espresso.js").server(config);

@@ -3,7 +3,6 @@ var express = require("express");
 var _ = require("underscore");
 var p = require("path");
 var commons = require(p.resolve(__dirname, "./commons/server.container.methods.js"));
-var logger = require(p.resolve(__dirname, "../libs/logger"));
 
 // DEFINE CLASS
 var esrt = function(options){
@@ -51,9 +50,6 @@ var esrt = function(options){
         return current;
 
     };
-
-    // CREATE LOGGER
-    router.log = logger(router.getConfig());
 
     return router;
 
