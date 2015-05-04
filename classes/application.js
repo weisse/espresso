@@ -244,16 +244,16 @@ var esapp = function(rd){
 
                     }).catch(function(err){
 
-                        app.log.error(err);
-                        app.log.error("make failed");
+                        espresso.log.error(err);
+                        espresso.log.error("make failed");
                         rej(err);
 
                     });
 
                 }else{
 
-                    app.log.error(err);
-                    app.log.error("make failed");
+                    espresso.log.error(err);
+                    espresso.log.error("make failed");
                     rej(err);
 
                 }
