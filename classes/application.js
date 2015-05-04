@@ -56,7 +56,15 @@ var esapp = function(rd){
     };
     app.getEP = function(){
 
-        return this.get("rd") + ".esa";
+        if(this.get("rd").match(/\.esa$/)){
+
+            return this.get("rd");
+
+        }else{
+
+            return this.get("rd") + ".esa";
+
+        }
 
     };
     app.getWD = function(cb){
