@@ -6,7 +6,9 @@ module.exports = function(promise, app, router, path, middlewares){
 
         for(var i = 0; i < middlewares.length; i++){
 
-            var middleware = require(p.normalize(p.resolve(app.get("wd") + "/middlewares", middlewares[i])));
+            var path = p.normalize(p.resolve(app.get("wd") + "/middlewares", middlewares[i]));
+            espresso.log.info("load router level middleware \"" + path + "\" on \"" + path + "\"");
+            var middleware = require(path);
 
             if(middleware){
 

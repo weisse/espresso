@@ -1,36 +1,39 @@
+// REQUIREMENTS
 var p = require("path");
+var x = require("xtra");
 
 module.exports = function(promise, app, router, path, methods){
 
-    for(var method in methods){
+    promise = promise.then(function(){
 
-        var args = [path];
+        for(var method in methods){
 
-        if(typeof methods[method] === "string"){
+            var args = [path];
 
-            methods[method] = [methods[method]];
+            if(typeof methods[method] === "string"){
 
-            for(var service in methods[method]){
+                methods[method] = [methods[method]];
 
-                var service = require(p.normalize(p.resolve(app.get("wd") + "/services", methods[method][service])));
+                for(var service in methods[method]){
 
-                if(service){
+                    var service = require(p.normalize(p.resolve(app.get("wd") + "/services", methods[method][service])));
 
-                    args.push(service);
+                    if(service){
+
+                        args.push(service);
+
+                    }
 
                 }
 
             }
 
-        }
-
-        promise = promise.then(function(){
-
+            espresso.log.info("load \"" + methods[method] + "\" service when \"" + method + "\" is called on \"" + path + "\" route")
             router[method].apply(router, args);
 
-        });
+        }
 
-    }
+    });
 
     return promise;
 

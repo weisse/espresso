@@ -65,7 +65,7 @@ var esapp = function(rd){
         var esa = this.getEP();
 
         // SEARCH FOR .ESA
-        fs.exists(this.getEP(), function(exists){
+        fs.exists(esa, function(exists){
 
             if(exists){
 
@@ -244,6 +244,8 @@ var esapp = function(rd){
 
                 }else{
 
+                    app.log.error(err);
+                    app.log.error("make failed");
                     rej(err);
 
                 }
