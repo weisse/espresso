@@ -3,7 +3,6 @@ var p = require("path");
 var util = require("util");
 var metrics = require("metrics-os");
 var ipcController = require(p.resolve(__dirname, "../libs/ipcController.js"));
-var print = require(p.resolve(__dirname, "../libs/print.js"));
 
 // IPC CONTROLLER
 espresso.ipc = new ipcController();
