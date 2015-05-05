@@ -1,0 +1,5 @@
+<script type="text/template">
+    <div class="col-xs-12">
+        <canvas id="myChart" style="width: 100%; height: 400px;"></canvas>
+    </div>
+</script>

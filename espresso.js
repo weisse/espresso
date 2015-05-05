@@ -15,7 +15,7 @@ var espresso = {
         if(config.dashboard){
 
             // CREATE DASHBOARD
-            var dashboard = cp.fork(p.resolve(__dirname, "./server-dashboard.js"));
+            var dashboard = cp.fork(p.resolve(__dirname, "./dashboard/init.js"));
             dashboard.send({type:"init",payload:config});
             (new ipcBridge(server)).addProcess(dashboard);
             (new ipcBridge(dashboard)).addProcess(server);

@@ -1,0 +1,51 @@
+<script type="text-template">
+    <div id="console-container">
+        <div id="console">
+            <div id="outputs-container">
+
+            </div>
+            <div id="input-container">
+                <strong>espresso: </strong>&nbsp;<input type="text" id="command-input">
+            </div>
+        </div>
+    </div>
+    <style>
+        #console{
+
+            height: 100%;
+            background-color: #555;
+            color: #ccc;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: hidden;
+
+        }
+        #command-input{
+
+            background-color: #555;
+            color: #ccc;
+            border:0;
+            margin:0;
+            padding:0;
+            box-shadow:none!important;
+            outline:none;
+            width: 90%;
+
+        }
+        #console-container{
+
+            height: 400px;
+
+        }
+        #console .panel, #console .panel-body{
+
+            height: 100%;
+
+        }
+        #console .panel-body{
+
+            border-bottom: 100px solid transparent;
+
+        }
+    </style>
+</script>

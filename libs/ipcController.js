@@ -6,17 +6,16 @@ module.exports = function(options){
     this.handlers = [];
     this.listeners = [];
     this.timeout = 10000;
-    this.handle = function(name, cb){
+    this.handle = function(handler, cb){
 
-        this.handlers.push({name:name,callback:cb});
+        this.handlers.push({handler:handler,callback:cb});
         return this;
 
     };
-    this.listen = function(name, id, cb){
+    this.listen = function(id, cb){
 
         var listener = {
 
-            name: name,
             id: id,
             callback: cb
 
@@ -42,13 +41,13 @@ module.exports = function(options){
         return listener;
 
     };
-    this.send = function(name, payload){
+    this.send = function(handler, payload){
 
         var message = {
 
             type: "message",
             id: Math.random().toString().substring(2),
-            name: name,
+            handler: handler,
             payload: payload
 
         };
@@ -58,19 +57,18 @@ module.exports = function(options){
 
         message.listen = function(cb){
 
-            return self.listen(message.name, message.id, cb);
+            return self.listen(message.id, cb);
 
         };
 
         return message;
 
     };
-    this.reply = function(name, id, payload){
+    this.reply = function(id, payload){
 
         var reply = {
 
             type: "reply",
-            name: name,
             id: id,
             payload: payload
 
@@ -86,7 +84,7 @@ module.exports = function(options){
 
             for(var i = 0; i < this.handlers.length; i++){
 
-                if(this.handlers[i].name === msg.name){
+                if(this.handlers[i].handler === msg.handler){
 
                     this.handlers[i].callback(msg.id, msg.payload);
 
@@ -98,7 +96,7 @@ module.exports = function(options){
 
             for(var i = 0; i < this.listeners.length; i++){
 
-                if(this.listeners[i].name === msg.name && this.listeners[i].id === msg.id){
+                if(this.listeners[i].id === msg.id){
 
                     this.listeners[i].callback(msg.payload);
                     this.listeners.splice(i, 1);
@@ -146,11 +144,11 @@ module.exports = function(options){
 
                 if(
                     x.isObject(options.handlers[i]) &&
-                    x.isString(options.handlers[i].name) &&
+                    x.isString(options.handlers[i].handler) &&
                     x.isFunction(options.handlers[i].callback)
                 ){
 
-                    this.handle(options.handlers[i].name, options.handlers[i].callback);
+                    this.handle(options.handlers[i].handler, options.handlers[i].callback);
 
                 }
 
