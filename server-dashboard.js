@@ -10,22 +10,21 @@ process.on("message", function(msg){
         var config = msg.payload;
 
         var app = express();
-        app.set("ipc", new ipcController);
+        app.set("ipc", new ipcController({timeout:1000}));
         app.get("/test", function(req,res){
 
-            var id = req.app.get("ipc").send("test", "echo");
-            var timeout = setTimeout(function(){
+            req.app.get("ipc")
+                .send("test", "echo")
+                .listen(function(payload){
 
-                req.app.get("ipc").unlistenById(id);
-                res.end("fallito!");
+                    res.end(payload);
 
-            }, 10000);
-            req.app.get("ipc").listenOnce("test", id, function(payload){
+                })
+                .timeout(function(){
 
-                clearTimeout(timeout);
-                res.end(payload);
+                    res.end("fallito!");
 
-            });
+                });
 
         });
         app.listen(config.dashboardPort);
