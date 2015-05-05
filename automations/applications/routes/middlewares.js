@@ -1,6 +1,10 @@
+// REQUIREMENTS
 var p = require("path");
+var x = require("xtra");
 
 module.exports = function(promise, app, router, path, middlewares){
+
+    if(x.isString(middlewares)) middlewares = [middlewares];
 
     promise = promise.then(function(){
 
