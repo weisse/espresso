@@ -16,7 +16,7 @@ module.exports = function(promise, app, router, path, methods){
 
                 for(var service in methods[method]){
 
-                    var service = require(p.normalize(p.resolve(app.get("wd") + "/services", methods[method][service])));
+                    var service = require(p.normalize(p.resolve(app.getWorkingPath() + "/services", methods[method][service])));
 
                     if(service){
 

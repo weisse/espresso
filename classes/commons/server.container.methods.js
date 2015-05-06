@@ -8,20 +8,102 @@ var bluebird = require("bluebird");
 // DEFINE MODULE
 module.exports = {
 
+    _unmount: function(child){
+
+        var route = _.find(this.getStack(), function(route){
+
+            return route.id === child.getId();
+
+        });
+
+        var stack = this.getStack();
+
+        stack = _.reject(this.getStack(), function(item){
+
+            return item === route;
+
+        });
+
+        this._setStack(stack);
+
+        return this;
+
+    },
+    _addChild: function(mountPath, child){
+
+        this._espresso.childrenTable.push({mountPath:mountPath,child:child});
+        return this;
+
+    },
+    _removeChild: function(child){
+
+        this._espresso.childrenTable = _.reject(this.getChildren(), function(item){
+
+            return item.child === child;
+
+        });
+
+        return this;
+
+    },
+    _setParent: function(parent){
+
+        this._espresso.parent = parent;
+        return this;
+
+    },
+    _setMountPath: function(mountPath){
+
+        this._espresso.mountPath = mountPath;
+        return this;
+
+    },
+    _setDescriptor: function(descriptor){
+
+        if(x.isObject(descriptor))
+            this._espresso.descriptor = descriptor;
+
+        return this;
+
+    },
+    _emptyStack: function(){
+
+        var stack = this.getStack();
+
+        for(var i = stack.length - 1; i >= 0; i--){
+
+            if(stack[i].espresso){
+
+                stack.splice(i, 1);
+
+            }
+
+        }
+
+        this._setStack(stack);
+        return this;
+
+    },
+    use: function(){
+
+        this._use.apply(this, arguments);
+        var stack = this.getStack();
+        stack[stack.length - 1].espresso = true;
+
+    },
     getType: function(){
 
         return this._espresso.type;
 
     },
+    getDescriptor: function(){
+
+        return this._espresso.descriptor;
+
+    },
     getParent: function(){
 
         return this._espresso.parent;
-
-    },
-    setParent: function(parent){
-
-        this._espresso.parent = parent;
-        return this;
 
     },
     getId: function(){
@@ -40,129 +122,165 @@ module.exports = {
         return this._espresso.mountPath;
 
     },
-    setMountPath: function(mountPath){
-
-        this._espresso.mountPath = mountPath;
-        return this;
-
-    },
-    getChildrenTable: function(){
+    getChildren: function(){
 
         return this._espresso.childrenTable;
 
     },
-    addChild: function(mountPath, child){
-
-        this._espresso.childrenTable.push({mountPath:mountPath,child:child});
-        return this;
-
-    },
-    removeChild: function(child){
-
-        this._espresso.childrenTable = _.reject(this.getChildrenTable(), function(item){
-
-            return item.child === child;
-
-        });
-
-        return this;
-
-    },
     deploy: function(mountPath, child){
 
-        var self = this;
+        if(!child.isDeployed()){
 
-        if(child.getType() === "application"){
+            var children = this.getChildren();
+            for(var i = 0; i < children.length; i++){
 
-            espresso.log.info("deploy", child.get("name"));
+                if(children[i].path === mountPath){
 
-            // WATCHER
-            if(child.getConfig("watch")){
+                    throw "there is already a container deployed in this path";
+                    return this;
 
-                setTimeout(function(){
-
-                    fs.watchFile(child.getEP(), function(curr, prev){
-
-                        fs.unwatchFile(child.getEP());
-                        require(p.resolve(__dirname, "../application"))(child.get("rd")).make().then(function(app){
-
-                            self.undeploy(child);
-                            return app;
-
-                        }).then(function(app){
-
-                            self.deploy(child._espresso.mountPath, app);
-                            return app;
-
-                        });
-
-                    });
-
-                }, child.getConfig("watchDelay"));
+                }
 
             }
 
+            var self = this;
+
+            if(child.getType() === "application"){
+
+                espresso.log.info("deploy", child.getName());
+
+                // WATCHER
+                if(child.getConfig("watch")){
+
+                    setTimeout(function(){
+
+                        fs.watchFile(child.getEsaPath(), function(curr, prev){
+
+                            fs.unwatchFile(child.getEsaPath());
+                            require(p.resolve(__dirname, "../application"))(child.getRoot()).make().then(function(app){
+
+                                self.undeploy(child);
+                                return app;
+
+                            }).then(function(app){
+
+                                self.deploy(child._espresso.mountPath, app);
+                                return app;
+
+                            });
+
+                        });
+
+                    }, child.getConfig("watchDelay"));
+
+                }
+
+            }
+
+            // USE CHILD
+            self.use(mountPath, child);
+
+            // SET REFERENCES
+            self.getStack()[self.getStack().length - 1].id = child.getId();
+            child._setParent(self)._setMountPath(mountPath);
+            self._addChild(mountPath, child);
+
+        }else{
+
+            throw "container already deployed";
+
         }
-
-        // USE CHILD
-        self.use(mountPath, child);
-
-        // SET REFERENCES
-        self.getStack()[self.getStack().length - 1].id = child.getId();
-        child.setParent(self).setMountPath(mountPath);
-        self.addChild(mountPath, child);
-
-        return this;
-
-    },
-    unmount: function(child){
-
-        var route = _.find(this.getStack(), function(route){
-
-            return route.id === child.getId();
-
-        });
-
-        var stack = this.getStack();
-
-        stack = _.reject(this.getStack(), function(item){
-
-            return item === route;
-
-        });
-
-        this.setStack(stack);
 
         return this;
 
     },
     undeploy: function(child){
 
-        if(child.getType() === "application"){
+        if(this.hasChild(child)){
 
-            espresso.log.info("undeploy", child.get("name"));
+            if(child.getType() === "application"){
 
-            // CLEAN CACHE
-            for(var path in require.cache){
+                espresso.log.info("undeploy", child.getName());
 
-                if(path.match("^" + child.get("wd"))){
+                // CLEAN CACHE
+                for(var path in require.cache){
 
-                    delete require.cache[path];
+                    if(path.match("^" + child.getWorkingPath())){
+
+                        delete require.cache[path];
+
+                    }
 
                 }
 
             }
 
+            // GET id
+            var id = child._espresso.id;
+
+            // REMOVE FROM PARENT ROUTER
+            this._unmount(child);
+
+            // REMOVE REFERENCES
+            child._setParent(null)._setMountPath(null);
+            this._removeChild(child);
+
+
+        }else{
+
+            espresso.log.error("I don't have this child");
+
         }
 
-        // GET id
-        var id = child._espresso.id;
+        return this;
 
-        // REMOVE FROM PARENT ROUTER
-        this.unmount(child);
+    },
+    undeployAll: function(){
 
-        // REMOVE FROM PARENT TABLE
-        this.removeChild(child);
+        var children = this.getChildren();
+
+        for(var i = children.length - 1; i >= 0; i--){
+
+            this.undeploy(children[i].child);
+
+        }
+
+        return this;
+
+    },
+    switch: function(current, candidate){
+
+        if(this.hasChild(current) && !candidate.isDeployed()){
+
+            mountPath = current.getMountPath();
+            this.undeploy(current).deploy(mountPath, candidate);
+
+        }else{
+
+            throw "I can't switch these containers";
+
+        }
+
+        return this;
+
+    },
+    clear: function(){
+
+        this.log.info("clear");
+
+        try{
+
+            this.init();
+
+        }catch(e){
+
+            // DO NOTHING
+
+        }finally{
+
+            this.undeployAll()._emptyStack().setConfig({});
+
+        }
 
         return this;
 
@@ -188,32 +306,16 @@ module.exports = {
         return this;
 
     },
-    getRoot: function(){
-
-        var root = this;
-        var current = this;
-
-        while(current){
-
-            current = current.getParent();
-            if(current) root = current;
-
-        }
-
-        return root;
-
-    },
     getHierarchy: function(){
 
-        var root = this.getRoot();
         var hierarchy = {};
 
         var recursive = function(entity){
 
             var obj = {};
             obj.type = entity.getType();
-            if(obj.type == "application") obj.name = entity.get("name");
-            var children = entity.getChildrenTable()
+            if(obj.type == "application") obj.name = entity.getName();
+            var children = entity.getChildren()
 
             if(children.length){
 
@@ -230,7 +332,33 @@ module.exports = {
 
         }
 
-        return JSON.stringify(recursive(root));
+        return JSON.stringify(recursive(this));
+
+    },
+    isDeployed: function(){
+
+        if(x.isFalsy(this.getParent()))
+            return false;
+        else
+            return true;
+
+    },
+    hasChild: function(child){
+
+        var children = this.getChildren();
+
+        for(var i = 0; i < children.length; i++){
+
+            if(children[i].child === child){
+
+                return true;
+                break;
+
+            }
+
+        }
+
+        return false;
 
     }
 

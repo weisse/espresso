@@ -11,6 +11,10 @@ var server = function(config){
     // GLOBALIZE
     espresso = this;
 
+    // CONTAINERS TABLE
+    this.containersTable = []
+
+    // CONFIGURATIONS
     this.config = _.extend(require(p.resolve(__dirname, "../defaults/server.config.json")), config || {});
     this.log = logger(this.config);
 
@@ -25,22 +29,28 @@ var server = function(config){
         return this;
 
     };
+    this.createApplication = function(rd){
+
+        return (new server.application(rd));
+
+    };
     this.loadMain = function(){
 
         var self = this;
 
         // SET ENTRY POINT
-        var wd = process.cwd();
-        if(this.config.main) wd = p.normalize(p.resolve(wd, this.config.main));
+        var rd = process.cwd();
+        if(this.config.main) rd = p.normalize(p.resolve(rd, this.config.main));
 
         // USE MAIN APPLICATION
-        require(p.resolve(__dirname, "./application"))(wd).make().then(function(app){
+        var main = new server.application(rd);
+        main.loadDescriptor().then(function(app){
 
-            self.root.deploy("/", app);
+            app.make().then(function(app){
 
-        }).then(function(){
+                self.root.deploy("/", app);
 
-            if(self.config.listen) self.listen();
+            });
 
         });
 
@@ -63,29 +73,20 @@ var server = function(config){
     this.init = function(){
 
         this.createRoot().loadMain();
+        if(this.config.listen) this.listen();
         return this;
 
     };
 
-    // DASHBOARD UTILS
+    // UTILS
+    this.getRoot = function(){
+
+        return this.root;
+
+    };
     this.getContainers = function(){
 
-        var containers = [];
-
-        var recursive = function(container){
-
-            var children = container.getChildrenTable();
-            for(var i = 0; i < children.length; i++){
-
-                containers.push(children[i].child);
-                recursive(children[i].child);
-
-            }
-
-        }
-
-        recursive(this.root);
-        return containers;
+        return this.containersTable;
 
     };
     this.getContainerById = function(id){
@@ -127,7 +128,7 @@ var server = function(config){
         var applications = this.getApplications();
         for(var i = 0; i < applications.length; i++){
 
-            if(applications[i].get("name") === name) return applications[i];
+            if(applications[i].getName() === name) return applications[i];
 
         }
 
@@ -136,6 +137,9 @@ var server = function(config){
     return this.init();
 
 };
+
+server.application = require(p.resolve(__dirname, "./application.js"));
+server.router = require(p.resolve(__dirname, "./router.js"));
 
 // EXPORTS ESPRESSO SERVER
 module.exports = server;

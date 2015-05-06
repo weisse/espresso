@@ -6,9 +6,23 @@ module.exports = function(promise, app, router, path, application){
     var App = require(p.resolve(__dirname, "../../../classes/application"));
     promise = promise.then(function(){
 
-        return App(p.normalize(p.resolve(app.get("wd") + "/applications", application))).make().then(function(app){
+        var NewApp = new App(p.normalize(p.resolve(app.getWorkingPath() + "/applications", application)));
 
-            router.deploy(path, app);
+        return new NewApp.promise(function(res,rej){
+
+            NewApp.loadDescriptor().then(function(app){
+
+                app.make().then(function(app){
+
+                    res(router.deploy(path, app));
+
+                }).catch(function(err){
+
+                    rej(err);
+
+                });
+
+            });
 
         });
 

@@ -6,11 +6,15 @@ var ipcController = require(p.resolve(__dirname, "../libs/ipcController.js"));
 
 // IPC CONTROLLER
 espresso.ipc = new ipcController();
+
+
 espresso.ipc.handle("echo", function(id, payload){
 
     espresso.ipc.reply(id, payload);
 
 });
+
+// PROCESS
 espresso.ipc.handle("process", function(id, payload){
 
     var proc = {
@@ -52,11 +56,8 @@ espresso.ipc.handle("process-short", function(id, payload){
     espresso.ipc.reply(id, JSON.stringify(proc));
 
 });
-espresso.ipc.handle("getApplications", function(id, payload){
 
-    espresso.ipc.reply(id, JSON.stringify(espresso.getApplications));
-
-});
+// CONSOLE
 espresso.ipc.handle("exec", function(id, command){
 
     var reply = new Object;
@@ -67,7 +68,7 @@ espresso.ipc.handle("exec", function(id, command){
 
     }catch(e){
 
-        reply.output = e.toString();
+        reply.output = util.format(e.stack);
 
     }
 

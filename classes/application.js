@@ -15,20 +15,26 @@ var esapp = function(rd){
     // CREATE AN EXPRESS APPLICATION
     var app = express();
 
-    // SET ROOT DIRECTORY IF IT WAS PROVIDED
-    if(rd) app.set("rd", rd);
-
     // ESPRESSO VARIABLES
     app._espresso = {
 
-        id: process.pid + (new Date()).getTime() + Math.random().toString().substring(2),
+        id: process.pid.toString() + (new Date()).getTime().toString() + Math.random().toString().substring(2),
+        name: null,
+        version: null,
+        descriptor: null,
         type: "application",
         parent: null,
         mountPath: null,
+        root: null,
+        workingPath: null,
+        tempPath: null,
         childrenTable: [],
         config: {}
 
     };
+
+    // BACKUP OLD .use()
+    app._use = app.use;
 
     // EXTEND WITH ELEMENT COMMON METHODS
     app = _.extend(app, commons);
@@ -37,224 +43,118 @@ var esapp = function(rd){
     app.promise = bluebird.Promise;
 
     // ESPRESSO METHODS
-    app.getStack = function(){
+    app._setName = function(name){
 
-        return this._router.stack;
+        if(x.isString(name))
+            this._espresso.name = name;
+
+        return this;
 
     };
-    app.setStack = function(stack){
+    app._setVersion = function(version){
+
+        if(x.isString(version) || x.isNumber(version))
+            this._espresso.version = version.toString();
+
+        return this;
+
+    };
+    app._setStack = function(stack){
 
         this._router.stack = stack;
         return this;
 
     };
-    app.setRD = function(rd){
+    app.getStack = function(){
 
-        this.set("rd", rd);
+        return this._router.stack;
+
+    };
+    app.setRoot = function(root){
+
+        this._espresso.root = root;
         return this;
 
     };
-    app.getEP = function(){
+    app.getRoot = function(){
 
-        if(this.get("rd").match(/\.esa$/)){
+        return this._espresso.root;
 
-            return this.get("rd");
+    },
+    app.getEsaPath = function(){
+
+        if(this.getRoot().match(/\.esa$/)){
+
+            return this.getRoot();
 
         }else{
 
-            return this.get("rd") + ".esa";
+            return this.getRoot() + ".esa";
 
         }
 
     };
-    app.getWD = function(cb){
+    app.getName = function(){
 
-        // SET ESA VAR
-        var esa = this.getEP();
+        return this._espresso.name;
 
-        // SEARCH FOR .ESA
-        fs.exists(esa, function(exists){
+    },
+    app.setTempPath = function(path){
 
-            if(exists){
-
-                // SET .ESA TEMP DIRECTORY
-                var guid = process.pid + "_" + (new Date()).getTime() + "_" + Math.random().toString().substring(2);
-                app.set("ed", p.normalize(p.resolve(p.resolve(app.get("rd"), ".."), guid)));
-
-                var unzip = require("unzip");
-
-                fs.createReadStream(esa)
-                    .pipe(unzip.Extract({path:app.get("ed")}))
-                    .on("error", function(err){
-
-                        espresso.log.error(err);
-                        if(x.isFunction(cb)) cb(err);
-
-                    })
-                    .on("close", function(){
-
-                        app.set("wd", app.get("ed"));
-                        if(x.isFunction(cb)) cb(null, app.get("wd"));
-
-                    });
-
-            }else{
-
-                app.set("wd", app.get("rd"));
-                if(x.isFunction(cb)) cb(null, app.get("wd"));
-
-            }
-
-        });
-
+        this._espresso.tempPath = path;
         return this;
 
     };
-    app.loadDescriptor = function(cb){
+    app.getTempPath = function(){
 
-        var app = this;
-
-        this.getWD(function(err, wd){
-
-            if(!err){
-
-                try{
-
-                    // LOAD APPLICATION JSON
-                    var descriptor = require(app.get("wd") + "/application.json");
-
-                    // SET APP NAME
-                    app.set("name", descriptor.name);
-
-                    // SET CONFIG
-                    app.setConfig(_.extend(require(p.resolve(__dirname, "../defaults/application.config.json")), descriptor.config || {}));
-
-                    // CREATE LOGGER
-                    if(espresso.config.log){
-
-                        app.setConfig("logName", app.get("name"));
-                        app.log = logger(app.getConfig());
-
-                    }
-
-                    // LOAD LOCALS
-                    if(descriptor.locals) require(p.resolve(__dirname, "../automations/applications/locals"))(app, descriptor.locals);
-
-                    // CALLBACK
-                    if(x.isFunction(cb)) cb(null, descriptor);
-
-                }catch(e){
-
-                    espresso.log.error(e);
-
-                    // CALLBACK
-                    if(x.isFunction(cb)) cb(e);
-
-                }
-
-            }
-
-        });
-
-        return this;
+        return this._espresso.tempPath;
 
     };
-    app.make = function(){
+    app.getWorkingPath = function(){
 
-        var app = this;
+        return this._espresso.workingPath;
+
+    };
+
+    // PROMISES
+    app.setWorkingPath = function(){
+
+        var self = this;
+
         var promise = new app.promise(function(res,rej){
 
-            app.loadDescriptor(function(err, descriptor){
+            // SET ESA VAR
+            var esa = self.getEsaPath();
 
-                if(!err){
+            // SEARCH FOR .ESA
+            fs.exists(esa, function(exists){
 
-                    espresso.log.info("make initialization");
+                if(exists){
 
-                    var promise = new app.promise(function(res,rej){
+                    // SET .ESA TEMP DIRECTORY
+                    var guid = process.pid + "_" + (new Date()).getTime() + "_" + Math.random().toString().substring(2);
+                    app.setTempPath(p.normalize(p.resolve(p.resolve(app.getRoot(), ".."), guid)));
 
-                        res();
+                    var unzip = require("unzip");
 
-                    });
+                    fs.createReadStream(esa)
+                        .pipe(unzip.Extract({path:app.getTempPath()}))
+                        .on("error", function(err){
 
-                    // PRE-MAKE EXECUTION
-                    if(descriptor["pre-make"]) promise = require(p.resolve(__dirname, "../automations/applications/preMake"))(promise, app, descriptor["pre-make"]);
+                            throw err;
 
-                    // MAKE INIT
+                        })
+                        .on("close", function(){
 
-                        promise = promise.then(function(){
-
-                            // SET APPLICATION ENGINES
-                            require(p.resolve(__dirname, "../automations/applications/engines"))(app, app.getConfig("engines"));
-
-                            // SET APPLICATION VIEWS DIRECTORY
-                            if(app.getConfig("views")) app.set("views", p.normalize(p.resolve(app.get("wd"), app.getConfig("viewsPath"))));
-
-                            // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
-                            if(app.getConfig("static")){
-
-                                for(var path in app.getConfig("staticPaths")){
-
-                                    var absolutePath = p.normalize(p.resolve(app.get("wd"), app.getConfig("staticPaths")[path]));
-                                    app.use(app.getConfig("staticRoute"), express.static(absolutePath, app.getConfig("staticOptions")));
-
-                                }
-
-                            }
+                            app._espresso.workingPath = app.getTempPath();
+                            res(app);
 
                         });
 
-                        // LOAD APPLICATION-LEVEL MIDDLEWARES
-                        if(descriptor.middlewares) promise = require(p.resolve(__dirname, "../automations/applications/middlewares"))(promise, app, descriptor.middlewares);
-
-                        // LOAD ROUTER
-                        if(descriptor.router){
-
-                            promise = promise.then(function(){
-
-                                var promise = new app.promise(function(res,rej){ res() });
-                                var router = Router(descriptor.router.options || {});
-
-                                promise = require(p.resolve(__dirname, "../automations/applications/router"))(promise, app, router, "/", descriptor.router);
-
-                                promise.then(function(){
-
-                                    app.deploy("/", router);
-
-                                });
-
-                                return promise;
-
-                            });
-
-                        }
-
-                        // LOAD APPLICATION-LEVEL ERRORWARES
-                        if(descriptor.errorwares) promise = require(p.resolve(__dirname, "../automations/applications/errorwares"))(promise, app, descriptor.errorwares);
-
-                    // MAKE ENDS
-
-                    // POST-MAKE EXECUTION
-                    if(descriptor["post-make"]) promise = require(p.resolve(__dirname, "../automations/applications/postMake"))(promise, app, descriptor["post-make"]);
-
-                    // MAKE-PROCESS ENDING
-                    promise.then(function(){
-
-                        espresso.log.info("make ends");
-                        res(app);
-
-                    }).catch(function(err){
-
-                        espresso.log.error(err);
-                        espresso.log.error("make failed");
-                        rej(err);
-
-                    });
-
                 }else{
 
-                    espresso.log.error(err);
-                    espresso.log.error("make failed");
-                    rej(err);
+                    app._espresso.workingPath = app.getRoot();
+                    res(app);
 
                 }
 
@@ -265,6 +165,160 @@ var esapp = function(rd){
         return promise;
 
     };
+    app.loadDescriptor = function(){
+
+        var app = this;
+
+        return this.setWorkingPath().then(function(wd){
+
+            var promise = new app.promise(function(res,rej){
+
+                // LOAD APPLICATION JSON
+                app._setDescriptor(require(app.getWorkingPath() + "/application.json") || null);
+
+                // SET APP NAME
+                app._setName(app.getDescriptor().name);
+
+                // SET APP VERSION
+                app._setVersion(app.getDescriptor().version);
+
+                // SET CONFIG
+                app.setConfig(_.extend(require(p.resolve(__dirname, "../defaults/application.config.json")), app.getDescriptor().config || {}));
+
+                // CREATE LOGGER
+                if(espresso.config.log){
+
+                    app.setConfig("logName", app.getName());
+                    app.log = logger(app.getConfig());
+
+                }
+
+                // LOAD LOCALS
+                if(app.getDescriptor().locals) require(p.resolve(__dirname, "../automations/applications/locals"))(app, app.getDescriptor().locals);
+
+                // RESOLVE
+                res(app)
+
+            });
+
+            return promise;
+
+        })
+        .catch(function(err){
+
+            throw err;
+
+        });
+
+    };
+    app.make = function(){
+
+        var app = this;
+        var promise = new app.promise(function(res,rej){
+
+            var descriptor = app.getDescriptor();
+
+            if(descriptor){
+
+                espresso.log.info("make initialization");
+
+                var promise = new app.promise(function(res,rej){
+
+                    res();
+
+                });
+
+                // PRE-MAKE EXECUTION
+                if(descriptor["pre-make"]) promise = require(p.resolve(__dirname, "../automations/applications/preMake"))(promise, app, descriptor["pre-make"]);
+
+                // MAKE INIT
+
+                    promise = promise.then(function(){
+
+                        // SET APPLICATION ENGINES
+                        require(p.resolve(__dirname, "../automations/applications/engines"))(app, app.getConfig("engines"));
+
+                        // SET APPLICATION VIEWS DIRECTORY
+                        if(app.getConfig("views")) app.set("views", p.normalize(p.resolve(app.getWorkingPath(), app.getConfig("viewsPath"))));
+
+                        // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
+                        if(app.getConfig("static")){
+
+                            for(var path in app.getConfig("staticPaths")){
+
+                                var absolutePath = p.normalize(p.resolve(app.getWorkingPath(), app.getConfig("staticPaths")[path]));
+                                app.use(app.getConfig("staticRoute"), express.static(absolutePath, app.getConfig("staticOptions")));
+
+                            }
+
+                        }
+
+                    });
+
+                    // LOAD APPLICATION-LEVEL MIDDLEWARES
+                    if(descriptor.middlewares) promise = require(p.resolve(__dirname, "../automations/applications/middlewares"))(promise, app, descriptor.middlewares);
+
+                    // LOAD ROUTER
+                    if(descriptor.router){
+
+                        promise = promise.then(function(){
+
+                            var promise = new app.promise(function(res,rej){ res() });
+                            var router = new Router(descriptor.router.options || {});
+
+                            promise = require(p.resolve(__dirname, "../automations/applications/router"))(promise, app, app, "/", descriptor.router);
+
+                            /*promise.then(function(){
+
+                                app.deploy("/", router);
+
+                            });*/
+
+                            return promise;
+
+                        });
+
+                    }
+
+                    // LOAD APPLICATION-LEVEL ERRORWARES
+                    if(descriptor.errorwares) promise = require(p.resolve(__dirname, "../automations/applications/errorwares"))(promise, app, descriptor.errorwares);
+
+                // MAKE ENDS
+
+                // POST-MAKE EXECUTION
+                if(descriptor["post-make"]) promise = require(p.resolve(__dirname, "../automations/applications/postMake"))(promise, app, descriptor["post-make"]);
+
+                // MAKE-PROCESS ENDING
+                promise.then(function(){
+
+                    espresso.log.info("make ends");
+                    res(app);
+
+                }).catch(function(err){
+
+                    espresso.log.error("make failed");
+                    throw err;
+
+                });
+
+            }else{
+
+                espresso.log.error("make failed");
+                throw "descriptor not loaded yet";
+
+            }
+
+        });
+
+        return promise;
+
+    };
+
+    // SET ROOT DIRECTORY IF IT WAS PROVIDED
+    if(rd) app.setRoot(rd);
+
+    // ADD APPLICATION ON ESPRESSO CONTAINERS TABLE
+    espresso.containersTable.push(app);
 
     return app;
 
