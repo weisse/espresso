@@ -25,7 +25,6 @@
 
     "log":true,
         "filesystemLog":true,
-            "filesystemLogPath":"espresso.log",
             "filesystemLogLevel":"info",
             "filesystemLogRotation":true,
                 "filesystemLogRotationPeriod":"1d",

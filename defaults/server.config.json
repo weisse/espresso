@@ -12,7 +12,6 @@
     "log":true,
         "logName":"espresso",
         "filesystemLog":true,
-            "filesystemLogPath":"espresso.log",
             "filesystemLogLevel":"info",
             "filesystemLogRotation":true,
                 "filesystemLogRotationPeriod":"1d",
@@ -23,10 +22,10 @@
 
     "root": {
 
+        "metrics":true,
         "log":true,
             "logName":"root",
             "filesystemLog":true,
-                "filesystemLogPath":"espresso.log",
                 "filesystemLogLevel":"info",
                 "filesystemLogRotation":true,
                     "filesystemLogRotationPeriod":"1d",
@@ -37,7 +36,7 @@
 
     },
 
-    "dashboard":false,
+    "dashboard":true,
         "dashboardPort":8888
 
 }

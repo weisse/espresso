@@ -25,8 +25,12 @@ var server = function(config){
         this.root = require(p.resolve(__dirname, "./application.js"))();
 
         // USE METRICS MIDDLEWARE
-        this.root.use(require("body-parser")());
-        this.root.use(require(p.resolve(__dirname, "../middlewares/metrics.js")))
+        if(this.config.root.metrics){
+
+            this.root.use(require("body-parser")());
+            this.root.use(require(p.resolve(__dirname, "../middlewares/metrics.js")))
+
+        };
 
         // CREATE ROOT LOGGER
         this.root.setConfig(this.config.root);

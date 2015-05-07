@@ -1,5 +1,6 @@
 // DEPENDENCIES
 var bunyan = require("bunyan");
+var p = require("path");
 
 // DEFINE MODULE
 module.exports = function(config){
@@ -16,7 +17,7 @@ module.exports = function(config){
 
             options.streams[idx] = {
 
-                path:config.filesystemLogPath,
+                path:p.resolve(p.dirname(GLOBAL.process.mainModule.filename), "logs/" + config.logName),
                 level:config.filesystemLogLevel,
 
             };
