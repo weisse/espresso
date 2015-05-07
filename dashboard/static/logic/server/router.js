@@ -18,12 +18,12 @@ define(["require"], function(require){
                     window.location.hash = "dashboard";
 
                 },
-                "dashboard":function(){
+                "metrics":function(){
 
-                    activateLink("dashboard");
-                    require(["serverDashboard"], function(dashboard){
+                    activateLink("metrics");
+                    require(["serverMetrics"], function(metrics){
 
-                        var view = new dashboard;
+                        var view = new metrics;
                         wrapper.pageRegion.show(view);
 
                     });

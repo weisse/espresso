@@ -18,15 +18,20 @@ var server = function(config){
     this.config = _.extend(require(p.resolve(__dirname, "../defaults/server.config.json")), config || {});
     this.log = logger(this.config);
 
+    // NON-CHAINABLE
     this.createRoot = function(){
 
         // CREATE ROOT APPLICATION
         this.root = require(p.resolve(__dirname, "./application.js"))();
 
+        // USE METRICS MIDDLEWARE
+        this.root.use(require("body-parser")());
+        this.root.use(require(p.resolve(__dirname, "../middlewares/metrics.js")))
+
         // CREATE ROOT LOGGER
         this.root.setConfig(this.config.root);
 
-        return this;
+        return this.root;
 
     };
     this.createApplication = function(rd){
@@ -34,51 +39,6 @@ var server = function(config){
         return (new server.application(rd));
 
     };
-    this.loadMain = function(){
-
-        var self = this;
-
-        // SET ENTRY POINT
-        var rd = process.cwd();
-        if(this.config.main) rd = p.normalize(p.resolve(rd, this.config.main));
-
-        // USE MAIN APPLICATION
-        var main = new server.application(rd);
-        main.loadDescriptor().then(function(app){
-
-            app.make().then(function(app){
-
-                self.root.deploy("/", app);
-
-            });
-
-        });
-
-        return this;
-
-    };
-    this.listen = function(p){
-
-        var self = this;
-
-        this.root.listen(p || this.config.port, function(){
-
-            espresso.log.info("listen to port " + self.config.port);
-
-        });
-
-        return this;
-
-    };
-    this.init = function(){
-
-        this.createRoot().loadMain();
-        if(this.config.listen) this.listen();
-        return this;
-
-    };
-
-    // UTILS
     this.getRoot = function(){
 
         return this.root;
@@ -133,6 +93,52 @@ var server = function(config){
         }
 
     }
+
+    // CHAINABLE
+    this.loadMain = function(){
+
+        var self = this;
+
+        // SET ENTRY POINT
+        var rd = process.cwd();
+        if(this.config.main) rd = p.normalize(p.resolve(rd, this.config.main));
+
+        // USE MAIN APPLICATION
+        var main = new server.application(rd);
+        main.loadDescriptor().then(function(app){
+
+            app.make().then(function(app){
+
+                self.root.deploy("/", app);
+
+            });
+
+        });
+
+        return this;
+
+    };
+    this.listen = function(p){
+
+        var self = this;
+
+        this.root.listen(p || this.config.port, function(){
+
+            espresso.log.info("listen to port " + self.config.port);
+
+        });
+
+        return this;
+
+    };
+    this.init = function(){
+
+        this.createRoot()
+        this.loadMain();
+        if(this.config.listen) this.listen();
+        return this;
+
+    };
 
     return this.init();
 

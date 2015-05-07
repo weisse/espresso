@@ -9,7 +9,7 @@ requirejs.config({
         // SERVER
         serverRouter: "./server/router",
         serverWrapper: "./server/views/wrapper",
-        serverDashboard: "./server/views/dashboard",
+        serverMetrics: "./server/views/metrics",
         serverConsole: "./server/views/console"
 
     }

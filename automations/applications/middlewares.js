@@ -10,7 +10,7 @@ module.exports = function(promise, app, middlewares){
 
         for(var i = 0; i < middlewares.length; i++){
 
-            var path = p.normalize(p.resolve(app.getWorkingPath() + "/middlewares", middlewares[i]))
+            var path = p.normalize(p.resolve(app.getWorkingDirectory() + "/middlewares", middlewares[i]))
             espresso.log.info("load application level middleware \"" + path + "\"");
             var middleware = require(path);
 

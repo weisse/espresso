@@ -1,4 +1,4 @@
-define(["text!./server/templates/dashboard.template"], function(template){
+define(["text!./server/templates/metrics.template"], function(template){
 
     return Marionette.LayoutView.extend({
 

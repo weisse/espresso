@@ -26,8 +26,8 @@ var esapp = function(rd){
         parent: null,
         mountPath: null,
         root: null,
-        workingPath: null,
-        tempPath: null,
+        workingDirectory: null,
+        tempDirectory: null,
         childrenTable: [],
         config: {}
 
@@ -42,7 +42,6 @@ var esapp = function(rd){
     // SET APP PROMISE AS BLUEBIRD PROMISE
     app.promise = bluebird.Promise;
 
-    // ESPRESSO METHODS
     app._setName = function(name){
 
         if(x.isString(name))
@@ -76,6 +75,8 @@ var esapp = function(rd){
         return this;
 
     };
+
+    // NON-CHAINABLE
     app.getRoot = function(){
 
         return this._espresso.root;
@@ -99,25 +100,27 @@ var esapp = function(rd){
         return this._espresso.name;
 
     },
-    app.setTempPath = function(path){
+    app.getTempDirectory = function(){
 
-        this._espresso.tempPath = path;
+        return this._espresso.tempDirectory;
+
+    };
+    app.getWorkingDirectory = function(){
+
+        return this._espresso.workingDirectory;
+
+    };
+
+    // CHAINABLE
+    app.setTempDirectory = function(path){
+
+        this._espresso.tempDirectory = path;
         return this;
-
-    };
-    app.getTempPath = function(){
-
-        return this._espresso.tempPath;
-
-    };
-    app.getWorkingPath = function(){
-
-        return this._espresso.workingPath;
 
     };
 
     // PROMISES
-    app.setWorkingPath = function(){
+    app.setWorkingDirectory = function(){
 
         var self = this;
 
@@ -133,12 +136,12 @@ var esapp = function(rd){
 
                     // SET .ESA TEMP DIRECTORY
                     var guid = process.pid + "_" + (new Date()).getTime() + "_" + Math.random().toString().substring(2);
-                    app.setTempPath(p.normalize(p.resolve(p.resolve(app.getRoot(), ".."), guid)));
+                    app.setTempDirectory(p.normalize(p.resolve(p.resolve(app.getRoot(), ".."), guid)));
 
                     var unzip = require("unzip");
 
                     fs.createReadStream(esa)
-                        .pipe(unzip.Extract({path:app.getTempPath()}))
+                        .pipe(unzip.Extract({path:app.getTempDirectory()}))
                         .on("error", function(err){
 
                             throw err;
@@ -146,14 +149,14 @@ var esapp = function(rd){
                         })
                         .on("close", function(){
 
-                            app._espresso.workingPath = app.getTempPath();
+                            app._espresso.workingDirectory = app.getTempDirectory();
                             res(app);
 
                         });
 
                 }else{
 
-                    app._espresso.workingPath = app.getRoot();
+                    app._espresso.workingDirectory = app.getRoot();
                     res(app);
 
                 }
@@ -169,12 +172,12 @@ var esapp = function(rd){
 
         var app = this;
 
-        return this.setWorkingPath().then(function(wd){
+        return this.setWorkingDirectory().then(function(wd){
 
             var promise = new app.promise(function(res,rej){
 
                 // LOAD APPLICATION JSON
-                app._setDescriptor(require(app.getWorkingPath() + "/application.json") || null);
+                app._setDescriptor(require(app.getWorkingDirectory() + "/application.json") || null);
 
                 // SET APP NAME
                 app._setName(app.getDescriptor().name);
@@ -239,14 +242,14 @@ var esapp = function(rd){
                         require(p.resolve(__dirname, "../automations/applications/engines"))(app, app.getConfig("engines"));
 
                         // SET APPLICATION VIEWS DIRECTORY
-                        if(app.getConfig("views")) app.set("views", p.normalize(p.resolve(app.getWorkingPath(), app.getConfig("viewsPath"))));
+                        if(app.getConfig("views")) app.set("views", p.normalize(p.resolve(app.getWorkingDirectory(), app.getConfig("viewsPath"))));
 
                         // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
                         if(app.getConfig("static")){
 
                             for(var path in app.getConfig("staticPaths")){
 
-                                var absolutePath = p.normalize(p.resolve(app.getWorkingPath(), app.getConfig("staticPaths")[path]));
+                                var absolutePath = p.normalize(p.resolve(app.getWorkingDirectory(), app.getConfig("staticPaths")[path]));
                                 app.use(app.getConfig("staticRoute"), express.static(absolutePath, app.getConfig("staticOptions")));
 
                             }
@@ -264,7 +267,7 @@ var esapp = function(rd){
                         promise = promise.then(function(){
 
                             var promise = new app.promise(function(res,rej){ res() });
-                            var router = new Router(descriptor.router.options || {});
+                            //var router = new Router(descriptor.router.options || {});
 
                             promise = require(p.resolve(__dirname, "../automations/applications/router"))(promise, app, app, "/", descriptor.router);
 
@@ -313,6 +316,21 @@ var esapp = function(rd){
         return promise;
 
     };
+    app.setLoadMake = function(){
+
+        this.setWorkingDirectory()
+        .then(function(app){
+
+            return app.loadDescriptor()
+
+        })
+        .then(function(app){
+
+            return app.make();
+
+        });
+
+    }
 
     // SET ROOT DIRECTORY IF IT WAS PROVIDED
     if(rd) app.setRoot(rd);

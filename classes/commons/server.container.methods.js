@@ -84,11 +84,11 @@ module.exports = {
         return this;
 
     },
-    use: function(){
 
-        this._use.apply(this, arguments);
-        var stack = this.getStack();
-        stack[stack.length - 1].espresso = true;
+    // NON-CHAINABLE
+    getParent: function(){
+
+        return this._espresso.parent;
 
     },
     getType: function(){
@@ -101,20 +101,9 @@ module.exports = {
         return this._espresso.descriptor;
 
     },
-    getParent: function(){
-
-        return this._espresso.parent;
-
-    },
     getId: function(){
 
         return this._espresso.id;
-
-    },
-    setid: function(id){
-
-        this._espresso.id = id;
-        return this;
 
     },
     getMountPath: function(){
@@ -125,6 +114,84 @@ module.exports = {
     getChildren: function(){
 
         return this._espresso.childrenTable;
+
+    },
+    getConfig: function(attr){
+
+        if(attr) return this._espresso.config[attr];
+        else return this._espresso.config;
+
+    },
+    hasChild: function(child){
+
+        var children = this.getChildren();
+
+        for(var i = 0; i < children.length; i++){
+
+            if(children[i].child === child){
+
+                return true;
+                break;
+
+            }
+
+        }
+
+        return false;
+
+    },
+    isDeployed: function(){
+
+        if(x.isFalsy(this.getParent()))
+            return false;
+        else
+            return true;
+
+    },
+    getHierarchy: function(){
+
+        var hierarchy = {};
+
+        var recursive = function(entity){
+
+            var obj = {};
+            obj.type = entity.getType();
+            if(obj.type == "application") obj.name = entity.getName();
+            var children = entity.getChildren()
+
+            if(children.length){
+
+                obj.children = {};
+                for(var i = 0; i < children.length; i++){
+
+                    obj.children[children[i].mountPath] = recursive(children[i].child);
+
+                }
+
+            }
+
+            return obj;
+
+        }
+
+        return JSON.stringify(recursive(this));
+
+    },
+
+    // CHAINABLE
+    use: function(){
+
+        this._use.apply(this, arguments);
+        var stack = this.getStack();
+        stack[stack.length - 1].espresso = true;
+
+        return this;
+
+    },
+    setid: function(id){
+
+        this._espresso.id = id;
+        return this;
 
     },
     deploy: function(mountPath, child){
@@ -205,7 +272,7 @@ module.exports = {
                 // CLEAN CACHE
                 for(var path in require.cache){
 
-                    if(path.match("^" + child.getWorkingPath())){
+                    if(path.match("^" + child.getWorkingDirectory())){
 
                         delete require.cache[path];
 
@@ -285,12 +352,6 @@ module.exports = {
         return this;
 
     },
-    getConfig: function(attr){
-
-        if(attr) return this._espresso.config[attr];
-        else return this._espresso.config;
-
-    },
     setConfig: function(){
 
         if(arguments.length > 1 && x.isString(arguments[0])){
@@ -306,60 +367,5 @@ module.exports = {
         return this;
 
     },
-    getHierarchy: function(){
-
-        var hierarchy = {};
-
-        var recursive = function(entity){
-
-            var obj = {};
-            obj.type = entity.getType();
-            if(obj.type == "application") obj.name = entity.getName();
-            var children = entity.getChildren()
-
-            if(children.length){
-
-                obj.children = {};
-                for(var i = 0; i < children.length; i++){
-
-                    obj.children[children[i].mountPath] = recursive(children[i].child);
-
-                }
-
-            }
-
-            return obj;
-
-        }
-
-        return JSON.stringify(recursive(this));
-
-    },
-    isDeployed: function(){
-
-        if(x.isFalsy(this.getParent()))
-            return false;
-        else
-            return true;
-
-    },
-    hasChild: function(child){
-
-        var children = this.getChildren();
-
-        for(var i = 0; i < children.length; i++){
-
-            if(children[i].child === child){
-
-                return true;
-                break;
-
-            }
-
-        }
-
-        return false;
-
-    }
 
 };

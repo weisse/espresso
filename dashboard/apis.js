@@ -70,10 +70,10 @@ module.exports = function(app){
             });
 
     });
-    router.post("/exec", function(req,res){
+    router.post("/repl", function(req,res){
 
         req.app.get("ipc")
-            .send("exec", req.body.command)
+            .send("repl", req.body.command)
             .listen(function(payload){
 
                 res.end(payload);

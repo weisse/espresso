@@ -43,28 +43,30 @@ define([
             $.ajax({
 
                 method:"post",
-                url: "./api/exec",
+                url: "./api/repl",
                 data: JSON.stringify({command:command}),
                 contentType: "application/json",
                 dataType: "json",
                 success: function(data){
 
-                    self.$el.find("#outputs-container").append("<div class=\"executed\"><strong>espresso: </strong>&nbsp;" + command + "</div>");
-                    self.$el.find("#outputs-container").append(data.output.replace(/\n/g, "<br>").replace(/\s/g, "&nbsp;"));
-                    self.$el.find("#command-input").val("");
-                    self.$el.find("#console").scrollTop(self.$el.find("#console")[0].scrollHeight);
+                    self.updateView(command, data.output.replace(/\n/g, "<br>").replace(/\s/g, "&nbsp;"));
 
                 },
                 error: function(){
 
-                    self.$el.find("#outputs-container").append("<div class=\"executed\"><strong>espresso: </strong>&nbsp;" + command + "</div>");
-                    self.$el.find("#outputs-container").append("command not executed due to a connection error");
-                    self.$el.find("#command-input").val("");
-                    self.$el.find("#console").scrollTop(self.$el.find("#console")[0].scrollHeight);
+                    self.updateView(command, "command not executed due to a connection error");
 
                 }
 
             });
+
+        },
+        updateView: function(command, text){
+
+            this.$el.find("#outputs-container").append("<div class=\"executed\"><strong>espresso: </strong>&nbsp;" + command + "</div>");
+            this.$el.find("#command-input").val("");
+            this.$el.find("#outputs-container").append(text);
+            this.$el.find("#console").scrollTop(this.$el.find("#console")[0].scrollHeight);
 
         }
 

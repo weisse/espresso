@@ -36,6 +36,8 @@ var esrt = function(options){
         return this;
 
     };
+
+    // NON-CHAINABLE
     router.getStack = function(){
 
         return this.stack;

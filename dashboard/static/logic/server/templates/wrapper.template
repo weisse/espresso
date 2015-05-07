@@ -6,8 +6,10 @@
             </div>
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav">
-                <li class="active"><a href="#dashboard">Dashboard</a></li>
-                <li><a href="#console">Console</a></li>
+                <li><a href="#metrics"><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Metrics</a></li>
+                <li><a href="#statistics"><span class="glyphicon glyphicon-stats"></span>&nbsp;Statistics</a></li>
+                <li><a href="#management"><span class="glyphicon glyphicon-wrench"></span>&nbsp;Management</a></li>
+                <li><a href="#console"><span class="glyphicon glyphicon-console"></span>&nbsp;Console</a></li>
               </ul>
           </div>
       </div>

@@ -58,7 +58,7 @@ espresso.ipc.handle("process-short", function(id, payload){
 });
 
 // CONSOLE
-espresso.ipc.handle("exec", function(id, command){
+espresso.ipc.handle("repl", function(id, command){
 
     var reply = new Object;
 
