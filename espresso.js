@@ -2,6 +2,7 @@
 var p = require("path");
 var cp = require("child_process");
 var ipcBridge = require(p.resolve(__dirname, "./libs/ipcBridge.js"));
+var bunyan = require("bunyan");
 
 // DEFINE ESPRESSO
 var espresso = {
@@ -21,6 +22,15 @@ var espresso = {
             (new ipcBridge(dashboard)).addProcess(server);
 
         }
+
+    },
+    log: function(options){
+
+        var file = options.file || "espresso";
+        var logPath = p.join(p.dirname(GLOBAL.process.mainModule.filename), "logs", file);
+        var command = "tail -f ";
+        command += logPath + " | bunyan";
+        cp.exec(command).stdout.pipe(process.stdout);
 
     }
 

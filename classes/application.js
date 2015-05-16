@@ -223,7 +223,7 @@ var esapp = function(rd){
 
             if(descriptor){
 
-                espresso.log.info("make initialization");
+                espresso.log.info(app.getName(), "make starts");
 
                 var promise = new app.promise(function(res,rej){
 
@@ -294,19 +294,19 @@ var esapp = function(rd){
                 // MAKE-PROCESS ENDING
                 promise.then(function(){
 
-                    espresso.log.info("make ends");
+                    espresso.log.info(app.getName(), "make ends");
                     res(app);
 
                 }).catch(function(err){
 
-                    espresso.log.error("make failed");
+                    espresso.log.error(app.getName(), "make failed");
                     throw err;
 
                 });
 
             }else{
 
-                espresso.log.error("make failed");
+                espresso.log.error(app.getName(), "make failed");
                 throw "descriptor not loaded yet";
 
             }

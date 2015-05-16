@@ -28,7 +28,7 @@ module.exports = function(promise, app, router, path, methods){
 
             }
 
-            espresso.log.info("load \"" + methods[method] + "\" service when \"" + method + "\" is called on \"" + path + "\" route")
+            espresso.log.info(app.getName(), "uses \"" + methods[method] + "\" service when \"" + method + "\" method is called on \"" + path + "\" route")
             router[method].apply(router, args);
 
         }

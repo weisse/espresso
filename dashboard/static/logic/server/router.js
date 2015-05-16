@@ -15,7 +15,7 @@ define(["require"], function(require){
 
                 "": function(){
 
-                    window.location.hash = "dashboard";
+                    window.location.hash = "metrics";
 
                 },
                 "metrics":function(){
@@ -34,8 +34,13 @@ define(["require"], function(require){
                     activateLink("console");
                     require(["serverConsole"], function(console){
 
-                        var view = new console;
-                        wrapper.pageRegion.show(view);
+                        var process = new Backbone.Model();
+                        var view = new console({model:process});
+                        process.fetch({url:"/api/process-short", success: function(){
+
+                            wrapper.pageRegion.show(view);
+
+                        }});
 
                     });
 

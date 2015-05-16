@@ -4,7 +4,7 @@ requirejs.config({
     paths: {
 
         app: "app",
-        text: "https://cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min",
+        text: "../vendor/text",
 
         // SERVER
         serverRouter: "./server/router",

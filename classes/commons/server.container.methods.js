@@ -214,31 +214,12 @@ module.exports = {
 
             if(child.getType() === "application"){
 
-                espresso.log.info("deploy", child.getName());
+                espresso.log.info(this.getName(), "deploys", child.getName(), "on", '"' + mountPath + '"', "route");
 
                 // WATCHER
                 if(child.getConfig("watch")){
 
-                    setTimeout(function(){
-
-                        fs.watchFile(child.getEsaPath(), function(curr, prev){
-
-                            fs.unwatchFile(child.getEsaPath());
-                            require(p.resolve(__dirname, "../application"))(child.getRoot()).make().then(function(app){
-
-                                self.undeploy(child);
-                                return app;
-
-                            }).then(function(app){
-
-                                self.deploy(child._espresso.mountPath, app);
-                                return app;
-
-                            });
-
-                        });
-
-                    }, child.getConfig("watchDelay"));
+                    this.watch(child);
 
                 }
 
@@ -254,6 +235,7 @@ module.exports = {
 
         }else{
 
+            espresso.log.error(child.getName(), "already deployed");
             throw "container already deployed";
 
         }
@@ -267,7 +249,7 @@ module.exports = {
 
             if(child.getType() === "application"){
 
-                espresso.log.info("undeploy", child.getName());
+                espresso.log.info(this.getName(), "undeploys", child.getName());
 
                 // CLEAN CACHE
                 for(var path in require.cache){
@@ -295,7 +277,7 @@ module.exports = {
 
         }else{
 
-            espresso.log.error("I don't have this child");
+            espresso.log.error(this.getName(), "doesn't have this child");
 
         }
 
@@ -324,6 +306,7 @@ module.exports = {
 
         }else{
 
+            espresso.log.error(this.getName(), "can't switch these containers");
             throw "I can't switch these containers";
 
         }
@@ -331,9 +314,9 @@ module.exports = {
         return this;
 
     },
-    clear: function(){
+    empty: function(){
 
-        this.log.info("clear");
+        espresso.log.info("empty", this.getName());
 
         try{
 
@@ -345,7 +328,7 @@ module.exports = {
 
         }finally{
 
-            this.undeployAll()._emptyStack().setConfig({});
+            this.undeployAll()._emptyStack();
 
         }
 
@@ -367,5 +350,40 @@ module.exports = {
         return this;
 
     },
+    watch: function(child){
+
+        var self = this;
+
+        setTimeout(function(){
+
+            fs.watchFile(child.getEsaPath(), function(curr, prev){
+
+                fs.unwatchFile(child.getEsaPath());
+
+                require(p.resolve(__dirname, "../application"))(child.getRoot())
+                .loadDescriptor()
+                .then(function(app){
+
+                    return app.make()
+
+                }).then(function(app){
+
+                    self.switch(child, app);
+                    return app;
+
+                }).catch(function(err){
+
+                    espresso.log.error(self.getName(), "fails", child.getName(), "automatic deploy");
+                    self.watch(child);
+
+                });
+
+            });
+
+        }, child.getConfig("watchDelay"));
+
+        return this;
+
+    }
 
 };

@@ -4,6 +4,7 @@ var _ = require("underscore");
 var p = require("path");
 var express = require("express");
 var logger = require(p.resolve(__dirname, "../libs/logger.js"));
+var bluebird = require("bluebird");
 
 // DEFINE ESPRESSO
 var server = function(config){
@@ -23,6 +24,9 @@ var server = function(config){
 
         // CREATE ROOT APPLICATION
         this.root = require(p.resolve(__dirname, "./application.js"))();
+
+        // SET ROOT NAME
+        this.root._setName("root");
 
         // USE METRICS MIDDLEWARE
         if(this.config.root.metrics){
@@ -98,7 +102,7 @@ var server = function(config){
 
     }
 
-    // CHAINABLE
+    // PROMISES
     this.loadMain = function(){
 
         var self = this;
@@ -109,38 +113,61 @@ var server = function(config){
 
         // USE MAIN APPLICATION
         var main = new server.application(rd);
-        main.loadDescriptor().then(function(app){
 
-            app.make().then(function(app){
+        // PROMISE
+        return main.loadDescriptor()
+        .then(function(app){
 
-                self.root.deploy("/", app);
+            return app.make();
 
-            });
+        }).catch(function(){
+
+            espresso.log.error("I can't load main application");
 
         });
-
-        return this;
 
     };
     this.listen = function(p){
 
         var self = this;
 
-        this.root.listen(p || this.config.port, function(){
+        var promise = new bluebird.Promise(function(res,rej){
 
-            espresso.log.info("listen to port " + self.config.port);
+            self.root.listen(p || self.config.port, function(){
+
+                espresso.log.info("listening to port " + self.config.port);
+                res();
+
+            }).on("error", function(err){
+
+                espresso.log.error(err);
+                rej(err);
+
+            });
 
         });
 
-        return this;
+        return promise;
 
     };
     this.init = function(){
 
-        this.createRoot()
-        this.loadMain();
-        if(this.config.listen) this.listen();
-        return this;
+        var self = this;
+
+        return this.loadMain()
+        .then(function(app){
+
+            return self.createRoot().deploy("/", app);
+
+        }).then(function(){
+
+            if(self.config.listen) return self.listen();
+
+        }).catch(function(){
+
+            espresso.log.error("I can't initialize the espresso server");
+
+        });
 
     };
 

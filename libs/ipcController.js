@@ -6,6 +6,23 @@ module.exports = function(options){
     this.handlers = [];
     this.listeners = [];
     this.timeout = 10000;
+    this.children = [];
+    this.bindChild = function(child){
+
+        for(var i = 0; i < this.children.length; i++)
+            if(this.children[i] === child) return this;
+
+        this.children.push(child);
+
+        child.on("message", function(msg){
+
+            self.receive(msg);
+
+        });
+
+        return this;
+
+    };
     this.handle = function(handler, cb){
 
         this.handlers.push({handler:handler,callback:cb});
@@ -41,7 +58,16 @@ module.exports = function(options){
         return listener;
 
     };
-    this.send = function(handler, payload){
+    this.send = function(handler, payload, child){
+
+        var proc = process;
+
+        if(child){
+
+            this.bindChild(child);
+            proc = child;
+
+        }
 
         var message = {
 
@@ -52,7 +78,7 @@ module.exports = function(options){
 
         };
 
-        process.send(message);
+        proc.send(message);
         var self = this;
 
         message.listen = function(cb){
@@ -160,6 +186,7 @@ module.exports = function(options){
 
     var self = this;
 
+    // LISTEN TO MESSAGES
     process.on("message", function(msg){
 
         self.receive(msg);

@@ -6,7 +6,9 @@ var _ = require("underscore");
 
 program
     .version(pkg.version)
-    .usage("espresso [command] [options]")
+    .usage("[command] [options]");
+
+program
     .command("server")
     .description("it runs your awsome web application")
         .option("-c, --cluster", "it activates cluster mode <default false>")
@@ -38,6 +40,16 @@ program
 
         // RUN IT
         new require("./espresso.js").server(config);
+
+    });
+program
+    .command("log")
+    .description("it shows the chosen log file in pretty style")
+        .option("-f --file <file>", "it defines the name of log file <default: espresso>")
+    .action(function(options){
+
+        // RUN IT
+        new require("./espresso.js").log(options);
 
     });
 

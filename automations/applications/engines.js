@@ -4,7 +4,7 @@ module.exports = function(app, engines){
 
     for(var i = 0; i < engines.length; i++){
 
-        espresso.log.info("load \"" + engines[i][0] + "\" engine for \"." + engines[i][1] + "\" files");
+        espresso.log.info(app.getName(), "uses \"" + engines[i][0] + "\" engine to render \"." + engines[i][1] + "\" files");
         app.engine(engines[i][1], cons[engines[i][0]]);
 
     }

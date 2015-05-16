@@ -73,7 +73,25 @@ module.exports = function(app){
     router.post("/repl", function(req,res){
 
         req.app.get("ipc")
-            .send("repl", req.body.command)
+            .send("repl", JSON.stringify(req.body))
+            .listen(function(payload){
+
+                res.end(payload);
+
+            })
+            .timeout(function(){
+
+                res.end("failed");
+
+            });
+
+    });
+    router.post("/workers/:pid/repl", function(req,res){
+
+        req.body.pid = req.params["pid"];
+
+        req.app.get("ipc")
+            .send("repl", JSON.stringify(req.body))
             .listen(function(payload){
 
                 res.end(payload);

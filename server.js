@@ -2,7 +2,8 @@
 var p = require("path");
 var server = require(p.resolve(__dirname, "./classes/server"));
 var logger = require(p.resolve(__dirname, "./libs/logger"));
-var cluster = require('cluster');
+var cluster = require("cluster");
+var ipcBridge = require(p.resolve(__dirname, "./libs/ipcBridge"));
 
 if(!cluster.isMaster){
 
@@ -10,8 +11,11 @@ if(!cluster.isMaster){
 
         if(msg.type && msg.type === "init"){
 
-            var config = msg.payload;
-            new server(config);
+            // START SERVER
+            new server(msg.payload);
+
+            // IPC INTERFACE
+            require(p.resolve(__dirname, "./IPCs/server-worker.js"));
 
         }
 
@@ -47,16 +51,24 @@ process.on("message", function(msg){
                 cluster.on("exit", function(worker, code, signal){
 
                     log.info("worker " + worker.process.pid + " died");
-                    if(self.config.forever) cluster.fork();
+                    if(config.forever) cluster.fork();
 
                 });
 
                 // SET NUMBER OF WORKERS
-                if(self.config.workers) workers = self.config.workers;
+                if(config.workers) workers = config.workers;
                 else workers = require('os').cpus().length - 1;
 
                 // CREATE WORKERS
-                for(var i = 0; i < workers; i++) cluster.fork().send(msg);
+                for(var i = 0; i < workers; i++){
+
+                    var worker = cluster.fork();
+                    worker.send(msg);
+
+                }
+
+                // IPC INTERFACE
+                require(p.resolve(__dirname, "./IPCs/server-master.js"));
 
             }
 

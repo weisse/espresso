@@ -18,6 +18,11 @@ ipc.handle("echo", function(id, payload){
 // PROCESS
 ipc.handle("process", function(id, payload){
 
+    var workers = [];
+
+    for(var proc in cluster.workers)
+        workers.push(cluster.workers[proc].process.pid);
+
     var proc = {
 
         pid: process.pid,
@@ -33,7 +38,7 @@ ipc.handle("process", function(id, payload){
         argv: process.argv,
         memoryUsage: process.memoryUsage(),
         isMaster: cluster.isMaster,
-        workers: []
+        workers: workers
 
     }
 
@@ -41,6 +46,11 @@ ipc.handle("process", function(id, payload){
 
 });
 ipc.handle("process-short", function(id, payload){
+
+    var workers = [];
+
+    for(var proc in cluster.workers)
+        workers.push(cluster.workers[proc].process.pid);
 
     var proc = {
 
@@ -54,7 +64,7 @@ ipc.handle("process-short", function(id, payload){
         cwd: process.cwd(),
         memoryUsage: process.memoryUsage(),
         isMaster: cluster.isMaster,
-        workers: x.size(cluster.workers)
+        workers: workers
 
     }
 
@@ -65,24 +75,39 @@ ipc.handle("process-short", function(id, payload){
 // CONSOLE
 ipc.handle("repl", function(id, obj){
 
-    var reply = new Object;
+    var worker;
     var obj = JSON.parse(obj);
 
-    try{
+    for(var proc in cluster.workers){
 
-        reply.output = util.format(eval.call(GLOBAL, obj.command));
+        if(cluster.workers[proc].process.pid == obj.pid){
 
-    }catch(e){
+            worker = cluster.workers[proc];
 
-        reply.output = util.format(e.stack);
+        }
 
     }
 
-    ipc.reply(id, JSON.stringify(reply));
+    if(worker){
 
-});
-ipc.handle("usage", function(id, payload){
+        ipc.send("repl", obj, worker)
+            .listen(function(payload){
 
-    ipc.reply(id, JSON.stringify(metrics()));
+                var payload = JSON.parse(payload);
+                payload.pid = worker.process.pid;
+                ipc.reply(id, JSON.stringify(payload));
+
+            })
+            .timeout(function(){
+
+                ipc.reply(id, "failed!");
+
+            });;
+
+    }else{
+
+        ipc.reply(id, "failed!");
+
+    }
 
 });
