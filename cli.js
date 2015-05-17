@@ -21,6 +21,7 @@ program
         .option("-d --dashboard", "it runs a beautiful dashboard <default false>")
         .option("-P --dashboard-port <dashboardPort>", "it defines the port number for the dashboard <default 8888>")
         .option("-f --config-file <configFile>", "it defines the location of your configuration file")
+        .option("-b --bare", "it chooses if you want to start a bare server or not")
     .action(function(options){
 
         // GET DEFAULTS
@@ -37,6 +38,7 @@ program
         if(options.repl) config.log = false, require("repl").start("espresso: ");
         if(options.dashboard) config.dashboard = true;
         if(options.dashboardPort) config.dashboardPort = options.dashboardPort;
+        if(options.bare) config.bare = true;
 
         // RUN IT
         new require("./espresso.js").server(config);

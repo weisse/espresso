@@ -102,7 +102,7 @@ ipc.handle("repl", function(id, obj){
 
                 ipc.reply(id, "failed!");
 
-            });;
+            });
 
     }else{
 

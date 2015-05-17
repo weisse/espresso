@@ -10,7 +10,7 @@ module.exports = function(promise, app, router, path, errorwares){
 
         for(var i = 0; i < errorwares.length; i++){
 
-            var path = p.normalize(p.resolve(app.getWorkingDirectory() + "/errorwares", errorwares[i]))
+            var path = p.join(app.getWorkingDirectory(), "./errorwares", errorwares[i]);
             espresso.log.info(app.getName(), "uses router level errorware \"" + path + "\" on \"" + path + "\"");
             var errorware = require(path);
 

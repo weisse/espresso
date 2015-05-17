@@ -10,13 +10,13 @@ var espresso = {
     server: function(config){
 
         // CREATE SERVER
-        var server = cp.fork(p.resolve(__dirname, "./server.js"));
+        var server = cp.fork(p.resolve(__dirname, "./processes/server.js"));
         server.send({type:"init",payload:config});
 
         if(config.dashboard){
 
             // CREATE DASHBOARD
-            var dashboard = cp.fork(p.resolve(__dirname, "./dashboard/init.js"));
+            var dashboard = cp.fork(p.resolve(__dirname, "./processes/dashboard.js"));
             dashboard.send({type:"init",payload:config});
             (new ipcBridge(server)).addProcess(dashboard);
             (new ipcBridge(dashboard)).addProcess(server);

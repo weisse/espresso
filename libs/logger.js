@@ -17,7 +17,7 @@ module.exports = function(config){
 
             options.streams[idx] = {
 
-                path:p.resolve(p.dirname(GLOBAL.process.mainModule.filename), "logs/" + config.logName),
+                path:p.resolve(p.dirname(GLOBAL.process.mainModule.filename), "../logs/" + config.logName),
                 level:config.filesystemLogLevel,
 
             };

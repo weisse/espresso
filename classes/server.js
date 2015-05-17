@@ -120,7 +120,7 @@ var server = function(config){
 
             return app.make();
 
-        }).catch(function(){
+        }).catch(function(err){
 
             espresso.log.error("I can't load main application");
 
@@ -154,16 +154,54 @@ var server = function(config){
 
         var self = this;
 
-        return this.loadMain()
-        .then(function(app){
+        return new bluebird.Promise(function(res,rej){
 
-            return self.createRoot().deploy("/", app);
+            if(!self.config.bare){
 
-        }).then(function(){
+                return self.loadMain().then(function(app){
 
-            if(self.config.listen) return self.listen();
+                    return self.createRoot().deploy("/", app);
 
-        }).catch(function(){
+                }).then(function(){
+
+                    if(self.config.listen) return self.listen();
+
+                }).then(function(){
+
+                    res();
+
+                }).catch(function(err){
+
+                    rej(err);
+
+                });
+
+            }else{
+
+                espresso.log.info("bare mode activated");
+                self.createRoot();
+
+                if(self.config.listen){
+
+                    return self.listen().then(function(){
+
+                        res();
+
+                    }).catch(function(err){
+
+                        rej(err);
+
+                    });
+
+                }else{
+
+                    res();
+
+                }
+
+            }
+
+        }).catch(function(err){
 
             espresso.log.error("I can't initialize the espresso server");
 

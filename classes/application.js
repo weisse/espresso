@@ -4,6 +4,7 @@ var x = require("xtra");
 var _ = require("underscore");
 var p = require("path");
 var fs = require("fs");
+var cp = require("child_process");
 var bluebird = require("bluebird");
 var Router = require(p.resolve(__dirname, "./router.js"));
 var commons = require(p.resolve(__dirname, "./commons/server.container.methods.js"));
@@ -134,28 +135,33 @@ var esapp = function(rd){
 
                 if(exists){
 
-                    // SET .ESA TEMP DIRECTORY
-                    var guid = process.pid + "_" + (new Date()).getTime() + "_" + Math.random().toString().substring(2);
-                    app.setTempDirectory(p.normalize(p.resolve(p.resolve(app.getRoot(), ".."), guid)));
+                    espresso.log.info(esa, "found, I'm extracting it")
+                    cp.fork(p.resolve(__dirname, "../processes/extract.js"))
+                    .on("message", function(response){
 
-                    var unzip = require("unzip");
+                        var responseJSON = JSON.parse(response);
 
-                    fs.createReadStream(esa)
-                        .pipe(unzip.Extract({path:app.getTempDirectory()}))
-                        .on("error", function(err){
+                        if(responseJSON.error){
 
-                            throw err;
+                            espresso.log.error(responseJSON.error);
+                            espresso.log.error(esa, "extraction failed");
+                            rej(responseJSON.error);
 
-                        })
-                        .on("close", function(){
+                        }else if(responseJSON.tempDirectory){
 
+                            espresso.log.info(esa, "extraction complete");
+                            app.setTempDirectory(responseJSON.tempDirectory);
+                            espresso.log.info(responseJSON.tempDirectory, "set as temporary directory for", esa);
                             app._espresso.workingDirectory = app.getTempDirectory();
                             res(app);
 
-                        });
+                        }
+
+                    }).send(esa);
 
                 }else{
 
+                    espresso.log.info(esa, "not found, I'm searching on root directory");
                     app._espresso.workingDirectory = app.getRoot();
                     res(app);
 
@@ -174,10 +180,12 @@ var esapp = function(rd){
 
         return this.setWorkingDirectory().then(function(wd){
 
-            var promise = new app.promise(function(res,rej){
+            espresso.log.info("loading", app.getWorkingDirectory(), "descriptor");
+
+            try{
 
                 // LOAD APPLICATION JSON
-                app._setDescriptor(require(app.getWorkingDirectory() + "/application.json") || null);
+                app._setDescriptor(require(p.resolve(app.getWorkingDirectory(), "./application.json")) || null);
 
                 // SET APP NAME
                 app._setName(app.getDescriptor().name);
@@ -199,17 +207,15 @@ var esapp = function(rd){
                 // LOAD LOCALS
                 if(app.getDescriptor().locals) require(p.resolve(__dirname, "../automations/applications/locals"))(app, app.getDescriptor().locals);
 
-                // RESOLVE
-                res(app)
+                // FULFILL
+                return app;
 
-            });
+            }catch(err){
 
-            return promise;
+                espresso.log.error(err);
+                throw err;
 
-        })
-        .catch(function(err){
-
-            throw err;
+            }
 
         });
 
@@ -242,7 +248,13 @@ var esapp = function(rd){
                         require(p.resolve(__dirname, "../automations/applications/engines"))(app, app.getConfig("engines"));
 
                         // SET APPLICATION VIEWS DIRECTORY
-                        if(app.getConfig("views")) app.set("views", p.normalize(p.resolve(app.getWorkingDirectory(), app.getConfig("viewsPath"))));
+                        if(app.getConfig("views")){
+
+                            var viewsPath = p.normalize(p.resolve(app.getWorkingDirectory(), app.getConfig("viewsPath")))
+                            espresso.log.info(app.getName(), "sets", viewsPath, "as views path");
+                            app.set("views", viewsPath);
+
+                        }
 
                         // USE EXPRESS STATIC (APPLICATION-LEVEL MIDDLEWARE)
                         if(app.getConfig("static")){
@@ -250,6 +262,7 @@ var esapp = function(rd){
                             for(var path in app.getConfig("staticPaths")){
 
                                 var absolutePath = p.normalize(p.resolve(app.getWorkingDirectory(), app.getConfig("staticPaths")[path]));
+                                espresso.log.info(app.getName(), "sets", absolutePath, "as static path")
                                 app.use(app.getConfig("staticRoute"), express.static(absolutePath, app.getConfig("staticOptions")));
 
                             }
@@ -261,21 +274,16 @@ var esapp = function(rd){
                     // LOAD APPLICATION-LEVEL MIDDLEWARES
                     if(descriptor.middlewares) promise = require(p.resolve(__dirname, "../automations/applications/middlewares"))(promise, app, descriptor.middlewares);
 
+                    // LOAD ROUTES
+                    if(descriptor.routes) promise = require(p.resolve(__dirname, "../automations/applications/routes"))(promise, app, app, descriptor);
+
                     // LOAD ROUTER
                     if(descriptor.router){
 
                         promise = promise.then(function(){
 
                             var promise = new app.promise(function(res,rej){ res() });
-                            //var router = new Router(descriptor.router.options || {});
-
                             promise = require(p.resolve(__dirname, "../automations/applications/router"))(promise, app, app, "/", descriptor.router);
-
-                            /*promise.then(function(){
-
-                                app.deploy("/", router);
-
-                            });*/
 
                             return promise;
 

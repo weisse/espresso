@@ -6,7 +6,7 @@ module.exports = function(promise, app, router, path, application){
     var App = require(p.resolve(__dirname, "../../../classes/application"));
     promise = promise.then(function(){
 
-        var NewApp = new App(p.normalize(p.resolve(app.getWorkingDirectory() + "/applications", application)));
+        var NewApp = new App(p.join(app.getWorkingDirectory(), "./applications", application));
 
         return new NewApp.promise(function(res,rej){
 

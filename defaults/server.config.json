@@ -1,9 +1,12 @@
 {
 
+    "bare":false,
+
     "main":".",
 
     "listen":true,
         "port":8080,
+        "hostname":null,
 
     "cluster":false,
         "workers":0,

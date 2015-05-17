@@ -44,7 +44,7 @@ module.exports = function(req, res, next){
         metrics.response.statusCode = res.statusCode;
 
         // METRICS PATH
-        var mp = p.resolve(p.dirname(GLOBAL.process.mainModule.filename), "metrics/uptime.json");
+        var mp = p.resolve(p.dirname(GLOBAL.process.mainModule.filename), "../metrics/uptime.json");
 
         // WRITE TO FILESYSTEM
         fs.appendFile(

@@ -1,9 +1,9 @@
 // REQUIREMENTS
 var p = require("path");
-var server = require(p.resolve(__dirname, "./classes/server"));
-var logger = require(p.resolve(__dirname, "./libs/logger"));
+var server = require(p.resolve(__dirname, "../classes/server"));
+var logger = require(p.resolve(__dirname, "../libs/logger"));
 var cluster = require("cluster");
-var ipcBridge = require(p.resolve(__dirname, "./libs/ipcBridge"));
+var ipcBridge = require(p.resolve(__dirname, "../libs/ipcBridge"));
 
 if(!cluster.isMaster){
 
@@ -15,7 +15,7 @@ if(!cluster.isMaster){
             new server(msg.payload);
 
             // IPC INTERFACE
-            require(p.resolve(__dirname, "./IPCs/server-worker.js"));
+            require(p.resolve(__dirname, "../IPCs/server-worker.js"));
 
         }
 
@@ -68,7 +68,7 @@ process.on("message", function(msg){
                 }
 
                 // IPC INTERFACE
-                require(p.resolve(__dirname, "./IPCs/server-master.js"));
+                require(p.resolve(__dirname, "../IPCs/server-master.js"));
 
             }
 
@@ -78,7 +78,7 @@ process.on("message", function(msg){
             new server(config);
 
             // IPC INTERFACE
-            require(p.resolve(__dirname, "./IPCs/server-single.js"));
+            require(p.resolve(__dirname, "../IPCs/server-single.js"));
 
         }
 
