@@ -214,7 +214,7 @@ module.exports = {
 
             if(child.getType() === "application"){
 
-                espresso.log.info(this.getName(), "deploys", child.getName(), "on", '"' + mountPath + '"', "route");
+                if(this.getType() === "application") espresso.log.info(this.getName(), "deploys", child.getName(), "on", '"' + mountPath + '"', "route");
 
                 // WATCHER
                 if(child.getConfig("watch")){
