@@ -214,7 +214,15 @@ module.exports = {
 
             if(child.getType() === "application"){
 
-                if(this.getType() === "application") espresso.log.info(this.getName(), "deploys", child.getName(), "on", '"' + mountPath + '"', "route");
+                if(this.getType() === "application"){
+
+                    espresso.log.info(this.getName(), "deploys", child.getName(), "on", '"' + mountPath + '"', "route");
+
+                }else{
+
+                    espresso.log.info("deploy", child.getName(), "on", '"' + mountPath + '"', "route");
+
+                }
 
                 // WATCHER
                 if(child.getConfig("watch")){
@@ -249,7 +257,15 @@ module.exports = {
 
             if(child.getType() === "application"){
 
-                espresso.log.info(this.getName(), "undeploys", child.getName());
+                if(this.getType() === "application"){
+
+                    espresso.log.info(this.getName(), "undeploys", child.getName());
+
+                }else{
+
+                    espresso.log.info("undeploy", child.getName());
+
+                }
 
                 // CLEAN CACHE
                 for(var path in require.cache){
@@ -373,7 +389,18 @@ module.exports = {
 
                 }).catch(function(err){
 
-                    espresso.log.error(self.getName(), "fails", child.getName(), "automatic deploy");
+                    espresso.log.error(err);
+
+                    if(self.getType() === "application"){
+
+                        espresso.log.error(self.getName(), "fails", child.getName(), "automatic deploy");
+
+                    }else{
+
+                        espresso.log.error(child.getName(), "automatic deploy failed");
+
+                    }
+
                     self.watch(child);
 
                 });

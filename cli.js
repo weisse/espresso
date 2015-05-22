@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 var program = require("commander");
 var path = require("path");
-var pkg = require( path.join(__dirname, 'package.json') );
+var pkg = require(path.join(__dirname, 'package.json'));
 var _ = require("underscore");
 
 program
@@ -19,13 +19,11 @@ program
         .option("-o --log", "it chooses if log or not <default true>")
         .option("-r --repl", "it runs a REPL <default false>")
         .option("-d --dashboard", "it runs a beautiful dashboard <default false>")
-        .option("-P --dashboard-port <dashboardPort>", "it defines the port number for the dashboard <default 8888>")
         .option("-f --config-file <configFile>", "it defines the location of your configuration file")
         .option("-b --bare", "it chooses if you want to start a bare server or not")
     .action(function(options){
 
-        // GET DEFAULTS
-        var config = require("./defaults/server.config.json");
+        var config = {};
 
         // CHECK OPTIONS
         if(options.configFile) config = _.extend(config, require(path.resolve(process.cwd(), options.configFile)) || {});
@@ -36,7 +34,6 @@ program
         if(options.main) config.main = path.resolve(process.cwd(), options.main);
         if(options.log) config.log = false;
         if(options.repl) config.log = false, require("repl").start("espresso: ");
-        if(options.dashboard) config.dashboard = true;
         if(options.dashboardPort) config.dashboardPort = options.dashboardPort;
         if(options.bare) config.bare = true;
 

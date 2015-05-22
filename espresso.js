@@ -1,6 +1,7 @@
 // REQUIREMENTS
 var p = require("path");
 var cp = require("child_process");
+var _ = require("underscore");
 var ipcBridge = require(p.resolve(__dirname, "./libs/ipcBridge.js"));
 var bunyan = require("bunyan");
 
@@ -11,9 +12,10 @@ var espresso = {
 
         // CREATE SERVER
         var server = cp.fork(p.resolve(__dirname, "./processes/server.js"));
+        config = _.extend(require(p.resolve(__dirname, "./defaults/server.config.json")), config);
         server.send({type:"init",payload:config});
 
-        if(config.dashboard){
+        /*if(config.dashboard){
 
             // CREATE DASHBOARD
             var dashboard = cp.fork(p.resolve(__dirname, "./processes/dashboard.js"));
@@ -21,7 +23,7 @@ var espresso = {
             (new ipcBridge(server)).addProcess(dashboard);
             (new ipcBridge(dashboard)).addProcess(server);
 
-        }
+        }*/
 
     },
     log: function(options){
