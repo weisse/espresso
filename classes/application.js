@@ -205,7 +205,7 @@ var esapp = function(rd){
                 }
 
                 // LOAD LOCALS
-                if(app.getDescriptor().locals) require(p.resolve(__dirname, "../automations/applications/locals"))(app, app.getDescriptor().locals);
+                if(app.getDescriptor().locals) require(p.resolve(__dirname, "../automations/containers/locals"))(app, app.getDescriptor().locals);
 
                 // FULFILL
                 return app;
@@ -238,14 +238,14 @@ var esapp = function(rd){
                 });
 
                 // PRE-MAKE EXECUTION
-                if(descriptor["pre-make"]) promise = require(p.resolve(__dirname, "../automations/applications/preMake"))(promise, app, descriptor["pre-make"]);
+                if(descriptor["pre-make"]) promise = require(p.resolve(__dirname, "../automations/containers/preMake"))(promise, app, descriptor["pre-make"]);
 
                 // MAKE INIT
 
                     promise = promise.then(function(){
 
                         // SET APPLICATION ENGINES
-                        require(p.resolve(__dirname, "../automations/applications/engines"))(app, app.getConfig("engines"));
+                        require(p.resolve(__dirname, "../automations/containers/engines"))(app, app.getConfig("engines"));
 
                         // SET APPLICATION VIEWS DIRECTORY
                         if(app.getConfig("views")){
@@ -272,10 +272,10 @@ var esapp = function(rd){
                     });
 
                     // LOAD APPLICATION-LEVEL MIDDLEWARES
-                    if(descriptor.middlewares) promise = require(p.resolve(__dirname, "../automations/applications/middlewares"))(promise, app, descriptor.middlewares);
+                    if(descriptor.middlewares) promise = require(p.resolve(__dirname, "../automations/containers/middlewares"))(promise, app, descriptor.middlewares);
 
                     // LOAD ROUTES
-                    if(descriptor.routes) promise = require(p.resolve(__dirname, "../automations/applications/routes"))(promise, app, app, descriptor);
+                    if(descriptor.routes) promise = require(p.resolve(__dirname, "../automations/containers/routes"))(promise, app, app, descriptor);
 
                     // LOAD ROUTER
                     if(descriptor.router){
@@ -283,7 +283,7 @@ var esapp = function(rd){
                         promise = promise.then(function(){
 
                             var promise = new app.promise(function(res,rej){ res() });
-                            promise = require(p.resolve(__dirname, "../automations/applications/router"))(promise, app, app, "/", descriptor.router);
+                            promise = require(p.resolve(__dirname, "../automations/containers/router"))(promise, app, app, "/", descriptor.router);
 
                             return promise;
 
@@ -292,12 +292,12 @@ var esapp = function(rd){
                     }
 
                     // LOAD APPLICATION-LEVEL ERRORWARES
-                    if(descriptor.errorwares) promise = require(p.resolve(__dirname, "../automations/applications/errorwares"))(promise, app, descriptor.errorwares);
+                    if(descriptor.errorwares) promise = require(p.resolve(__dirname, "../automations/containers/errorwares"))(promise, app, descriptor.errorwares);
 
                 // MAKE ENDS
 
                 // POST-MAKE EXECUTION
-                if(descriptor["post-make"]) promise = require(p.resolve(__dirname, "../automations/applications/postMake"))(promise, app, descriptor["post-make"]);
+                if(descriptor["post-make"]) promise = require(p.resolve(__dirname, "../automations/containers/postMake"))(promise, app, descriptor["post-make"]);
 
                 // MAKE-PROCESS ENDING
                 promise.then(function(){

@@ -2,7 +2,7 @@
 var p = require("path");
 var x = require("xtra");
 
-module.exports = function(promise, app, router, path, errorwares){
+module.exports = function(promise, app, errorwares){
 
     if(x.isString(errorwares)) errorwares = [errorwares];
 
@@ -10,13 +10,13 @@ module.exports = function(promise, app, router, path, errorwares){
 
         for(var i = 0; i < errorwares.length; i++){
 
-            var path = p.join(app.getWorkingDirectory(), "./errorwares", errorwares[i]);
-            espresso.log.info(app.getName(), "uses router level errorware \"" + path + "\" on \"" + path + "\"");
+            var path = p.join(app.getWorkingDirectory(), "./errorwares", errorwares[i])
+            espresso.log.info(app.getName(), "uses container level errorware \"" + path + "\"");
             var errorware = require(path);
 
             if(errorware){
 
-                router.use(path, errorware);
+                app.use(errorware);
 
             }
 

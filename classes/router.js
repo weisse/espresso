@@ -19,6 +19,7 @@ var esrt = function(options){
         parent: null,
         mountPath: null,
         childrenTable: [],
+        name: "router" + espresso.routersCount++,
         config: _.extend(require(p.resolve(__dirname, "../defaults/router.config.json")), options.config || {})
 
     };
@@ -41,6 +42,11 @@ var esrt = function(options){
     router.getStack = function(){
 
         return this.stack;
+
+    };
+    router.getName = function(){
+
+        return this._espresso.name;
 
     };
     router.getApp = function(){

@@ -2,7 +2,7 @@
 var p = require("path");
 var x = require("xtra");
 
-module.exports = function(promise, app, router, path, methods){
+module.exports = function(promise, app, container, path, methods){
 
     promise = promise.then(function(){
 
@@ -28,8 +28,8 @@ module.exports = function(promise, app, router, path, methods){
 
             }
 
-            espresso.log.info(app.getName(), "uses \"" + methods[method] + "\" service when \"" + method + "\" method is called on \"" + path + "\" route")
-            router[method].apply(router, args);
+            espresso.log.info(container.getName(), "uses \"" + methods[method] + "\" service when \"" + method + "\" method is called on \"" + path + "\" route")
+            container[method].apply(container, args);
 
         }
 

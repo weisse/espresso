@@ -1,7 +1,7 @@
 // DEPENDENCIES
 var p = require("path");
 
-module.exports = function(promise, app, router, path, application){
+module.exports = function(promise, app, container, path, application){
 
     var App = require(p.resolve(__dirname, "../../../classes/application"));
     promise = promise.then(function(){
@@ -14,7 +14,7 @@ module.exports = function(promise, app, router, path, application){
 
                 app.make().then(function(app){
 
-                    res(router.deploy(path, app));
+                    res(container.deploy(path, app));
 
                 }).catch(function(err){
 

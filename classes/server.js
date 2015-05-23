@@ -12,6 +12,9 @@ var server = function(config){
     // GLOBALIZE
     espresso = this;
 
+    // ROUTERS COUNT
+    this.routersCount = 0;
+
     // CONTAINERS TABLE
     this.containersTable = []
 
